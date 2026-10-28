@@ -14,7 +14,7 @@
  */
 
 // ---- Настройки подключения (совпадают с config.php) ----
-$DB_HOST = 'localhost';
+$DB_HOST = 'localhost';  // локально в Open Server — localhost (или 127.0.0.1), на beget — localhost
 $DB_NAME = 'gpu_compare';
 $DB_USER = 'root';
 $DB_PASS = '';           // в Open Server Panel у root по умолчанию пустой пароль
