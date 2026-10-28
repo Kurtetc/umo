@@ -332,7 +332,6 @@ tr.row-dragging td:nth-child(-n+2){z-index:5}
 
 /* ===== v18: ориентация таблицы, кнопки под таблицей ===== */
 .table-panel:not(.orient-h) #gridT,.table-panel.orient-h #gpuTable{display:none}
-#gpuTable tbody tr[data-catalog="1"]{display:none}
 .tgrid{--tl:132px;--tw:128px;display:grid;grid-template-columns:minmax(min-content,var(--tl)) repeat(var(--n,1),minmax(var(--tw),1fr));width:max(100%,calc(var(--tl) + var(--n,1)*var(--tw)));background:#0b1929;font-size:12px;color:#d5e5f3}
 .tg-row{display:contents}
 .tg-row>*{min-width:0;padding:9px 10px;border-right:1px solid #29435c;border-bottom:1px solid #263e56;background:#0b1929}
@@ -388,6 +387,8 @@ body.theme-forest{--bg:#081812;--panel:#10261d;--panel2:#173528;--line:#285440;-
 body.theme-mono .drawing-text-editor,body.theme-purple .drawing-text-editor,body.theme-forest .drawing-text-editor{background:#151515;color:#fff;caret-color:#fff}
 body.theme-light .drawing-text-editor{background:#fff;color:#111;caret-color:#111;border-color:#087fa3}
 body.theme-light .drawing-text-editor:empty:before{color:#6d7c8b}
+
+#gpuTable tbody tr[data-catalog="1"]{display:none}
 </style>
 <style id="v22-compact-gpu-column">
 @media(min-width:761px){#gpuTable tbody td:nth-child(2) .gpu-name{gap:6px;align-items:center!important}#gpuTable .gpu-mark{width:23px;height:23px;border-radius:5px;font-size:9px;flex:0 0 23px}#gpuTable .gpu-name small{display:block!important;font-size:9px;line-height:1.1;margin-top:2px;white-space:nowrap;color:var(--muted,#8da7c0)!important}#gpuTable .gpu-name .brand-name{min-height:0!important;line-height:1.15;font-size:11px;white-space:nowrap;overflow-wrap:normal}#gpuTable tbody td:nth-child(2){min-width:165px!important;width:165px;padding:7px 8px!important}}
