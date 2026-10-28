@@ -13,18 +13,14 @@
  *      для периодического обновления базы — повторный запуск перезапишет данные).
  */
 
-// ---- Настройки подключения (совпадают с config.php) ----
-$DB_HOST = 'localhost';  // локально в Open Server — localhost (или 127.0.0.1), на beget — localhost
-$DB_NAME = 'gpu_compare';
-$DB_USER = 'root';
-$DB_PASS = '';           // в Open Server Panel у root по умолчанию пустой пароль
-$CSV     = __DIR__ . '/bd.csv';
+// ---- Настройки подключения берутся из config.php (чтобы не расходились) ----
+require __DIR__ . '/config.php';
+$CSV = __DIR__ . '/bd.csv';
 
-// ---- Подключение ----
+// ---- Подключение (db() сам переберёт localhost / 127.0.0.1) ----
 try {
-    $pdo = new PDO("mysql:host=$DB_HOST;dbname=$DB_NAME;charset=utf8mb4", $DB_USER, $DB_PASS,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-} catch (PDOException $e) {
+    $pdo = db();
+} catch (Throwable $e) {
     die("Не удалось подключиться к MySQL: " . $e->getMessage() . "\n");
 }
 

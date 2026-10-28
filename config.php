@@ -10,10 +10,13 @@
  *                               имя базы обычно вида login_dbname.
  */
 
-$DB_HOST = 'localhost';   // если не сработает — поставьте '127.0.0.1'
+// ВАЖНО: на вашем компьютере MySQL слушает ТОЛЬКО адрес 127.0.1.31 (проверено
+// check_db.php), поэтому host должен быть именно '127.0.1.31'.
+// На beget потом поставите 'localhost' + свои user/pass.
+$DB_HOST = '127.0.1.31';
 $DB_NAME = 'gpu_compare';        // на beget может быть, например, 'username_gpu'
 $DB_USER = 'root';               // на beget — ваш пользователь MySQL
-$DB_PASS = '';                   // на beget — пароль пользователя MySQL
+$DB_PASS = '';                   // в Open Server у root пароль ПУСТОЙ; на beget — пароль пользователя
 
 /** Подключение к базе (PDO) или понятная ошибка без белого экрана. */
 function db(): PDO
@@ -21,11 +24,12 @@ function db(): PDO
     global $DB_HOST, $DB_NAME, $DB_USER, $DB_PASS;
     static $pdo = null;
     if ($pdo === null) {
-        // 'localhost' PHP может трактовать как сокет (unix socket), поэтому
-        // при неудаче автоматически пробуем '127.0.0.1' по TCP/3306.
+        // Если не удалось — дополнительно пробуем localhost и 127.0.0.1
+        // (на случай, если MySQL слушает их, а в config.php указан другой хост).
         $hosts = [$DB_HOST];
-        if ($DB_HOST === 'localhost') $hosts[] = '127.0.0.1';
-        elseif ($DB_HOST === '127.0.0.1') $hosts[] = 'localhost';
+        foreach (['localhost', '127.0.0.1'] as $extra) {
+            if (!in_array($extra, $hosts, true)) $hosts[] = $extra;
+        }
         $lastErr = null;
         foreach ($hosts as $h) {
             try {
