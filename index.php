@@ -35,9 +35,415 @@ window.FEATURES={login:false,processors:false,rate:false,error:false,contact:fal
 off.forEach(function(k){document.documentElement.classList.add('off-'+k)});
 if(off.length){var s=document.createElement('style');s.textContent=off.map(function(k){return '[data-feature="'+k+'"]'}).join(',')+'{display:none!important}';document.head.appendChild(s);}})();
 </script>
-<link rel="stylesheet" href="assets/style.css">
+<style>
+:root{--bg:#07111f;--panel:#0d1b2d;--panel2:#10233a;--line:#203b58;--text:#eaf4ff;--muted:#8fa9c4;--cyan:#42d9f5;--blue:#1688d4;--green:#4de0ad;--yellow:#ffcf70}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Inter,Segoe UI,Arial,sans-serif;background:radial-gradient(ellipse at 50% 0%,#102b47 0%,var(--bg) 58%);color:var(--text)}
+button,input,select{font:inherit}.app{height:100vh;display:grid;grid-template-rows:64px minmax(0,1fr)}
+.topbar{display:flex;align-items:center;gap:22px;padding:0 22px;border-bottom:1px solid var(--line);background:#071321eF;min-width:0}.brand{display:flex;align-items:center;gap:10px;min-width:225px;font-weight:800;letter-spacing:.4px}.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--cyan),var(--blue));display:grid;place-items:center;color:#03111d;font-weight:900;box-shadow:0 0 24px #42d9f533}.brand small{display:block;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:1.5px;margin-top:2px}.search{max-width:560px;flex:1;position:relative}.search input{width:100%;padding:11px 14px 11px 38px;border:1px solid var(--line);border-radius:10px;background:#0b1929;color:var(--text);outline:none}.search:before{content:'⌕';position:absolute;left:13px;top:5px;color:var(--cyan);font-size:25px}.top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.pill{border:1px solid var(--line);background:#102238;color:#c7d9eb;padding:8px 12px;border-radius:9px;font-size:12px}.status{color:var(--green);font-size:12px;white-space:nowrap}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr) 248px;gap:12px;padding:12px;min-height:0;overflow:hidden}.sidebar,.rightbar,.main{min-height:0;min-width:0}.panel{border:1px solid var(--line);background:linear-gradient(180deg,#0e1e31f5,#0a1726f5);border-radius:14px;box-shadow:0 12px 35px #0002}.sidebar{padding:16px 12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}.sidebar #siteFeedback{margin-top:auto;text-align:left;width:100%}.section-label{font-size:10px;letter-spacing:1.5px;color:#6f91b3;font-weight:800;margin:8px 10px}.navitem{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:9px;color:#a9bfd5;font-size:13px}.navitem.active{color:#e9fbff;background:linear-gradient(90deg,#123d59,#102a42);border:1px solid #20516b}.navitem .ico{width:20px;text-align:center;color:var(--cyan);font-size:16px}
+.main{display:flex;flex-direction:column;gap:10px;overflow:hidden}.heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:5px 3px 2px}.eyebrow{font-size:10px;letter-spacing:2px;color:var(--cyan);font-weight:800;text-transform:uppercase}.heading h1{font-size:24px;margin:5px 0 4px;letter-spacing:-.5px}.heading p{margin:0;color:var(--muted);font-size:12px}.heading-actions{display:flex;gap:8px;padding-top:8px}.btn{border:1px solid #24506d;background:#102942;color:#d9f6ff;border-radius:9px;padding:9px 12px;font-size:12px;cursor:pointer}.btn.primary{background:linear-gradient(135deg,#1c9acb,#146bc2);border-color:#36c4e7;color:white;font-weight:700}.btn:hover{filter:brightness(1.15)}
+.filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px}
+.filters{gap:10px;padding:12px;align-items:center}
+.filter-title{width:100%;font-size:11px;letter-spacing:1px;color:#a9bfd4;margin:0 0 1px 2px}
+.gpu-filter{position:relative;flex:1 1 185px;min-width:170px;max-width:260px}
+.gpu-filter input{width:100%;height:42px;padding:0 40px 0 13px;border:1px solid #35516b;border-radius:10px;background:#0a1828;color:#eaf4ff;font-size:12px;font-weight:750;outline:none;box-shadow:inset 0 0 0 1px #ffffff04;transition:border-color .15s,box-shadow .15s}
+.gpu-filter input::placeholder{opacity:1;color:var(--brand-color);font-weight:800}
+.gpu-filter input:focus{border-color:var(--brand-color);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand-color) 18%,transparent)}
+.filter-arrow{position:absolute;right:5px;top:5px;width:32px;height:32px;border:0;border-radius:7px;background:color-mix(in srgb,var(--brand-color) 13%,#0b1929);color:var(--brand-color);font-size:17px;cursor:pointer}
+.filter-options{display:none;position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:20;max-height:230px;overflow:auto;padding:5px;border:1px solid color-mix(in srgb,var(--brand-color) 45%,#263e57);border-radius:10px;background:#0a1726;box-shadow:0 12px 28px #0009}
+.gpu-filter.open .filter-options{display:block}
+.filter-option{display:block;width:100%;padding:9px 10px;border:0;border-radius:6px;background:transparent;text-align:left;color:#dceaf7;font-size:11px;cursor:pointer}
+.filter-option:hover,.filter-option:focus{background:color-mix(in srgb,var(--brand-color) 16%,#102238);outline:none}
+.all-filter{--brand-color:#42d9f5}
+.nvidia-filter{--brand-color:#719b3c}
+.amd-filter{--brand-color:#c85b62}
+.intel-filter{--brand-color:#478bbd}
+.retro-filter{--brand-color:#b69a67}
+.gpu-name .brand-name{font-weight:800}
+.gpu-name .brand-name.nvidia{color:#8cae62}
+.gpu-name .brand-name.amd{color:#d47a7f}
+.gpu-name .brand-name.intel{color:#72a9d0}
+.gpu-name small{color:#8da7c0}
+.gpu-mark.nvidia-mark{background:#1b2a1b;color:#9dbb79;border-color:#425d39}
+.gpu-mark.amd-mark{background:#302024;color:#d9858a;border-color:#70424a}
+.gpu-mark.intel-mark{background:#142b3d;color:#79afd3;border-color:#315c7b}
+@media(max-width:900px){.gpu-filter{flex-basis:calc(50% - 10px);max-width:none}.count{margin-left:0}}
+@media(max-width:540px){.gpu-filter{flex-basis:100%;max-width:none}.table-bottom{flex-wrap:wrap;white-space:normal}.table-bottom .bottom-spacer{display:none}.table-bottom #shown{width:100%}.table-bottom .bottom-actions{margin-left:auto;flex-wrap:wrap}}
+.filter-title{font-size:11px;color:#8ca9c6;font-weight:700;margin-right:2px}.chip{border:1px solid #24405a;color:#a9bfd4;background:#0b1b2d;border-radius:20px;padding:7px 11px;font-size:11px;cursor:pointer}.chip.active{border-color:#2b9dc5;background:#10354b;color:#6ce7ff}.count{margin-left:auto;font-size:11px;color:#91abc5;white-space:nowrap}
+.table-panel{display:flex;flex-direction:column;min-height:0;flex:1;overflow:hidden}.table-top{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);gap:12px}.table-top strong{font-size:13px}.table-top span{font-size:11px;color:var(--muted)}.scroll-hint{color:var(--cyan)!important}.table-viewport{position:relative;flex:1;min-height:0;overflow-x:auto;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#247ca2 #091726;overscroll-behavior-x:contain;cursor:ew-resize}.table-viewport::-webkit-scrollbar{height:9px}.table-viewport::-webkit-scrollbar-track{background:#091726}.table-viewport::-webkit-scrollbar-thumb{background:#1e6688;border-radius:10px;border:2px solid #091726}
+.table-viewport::-webkit-scrollbar:vertical{width:9px}.table-viewport::-webkit-scrollbar-thumb:vertical{background:#247ca2;border-radius:10px;border:2px solid #091726}
+.remove-gpu{display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;min-height:28px;padding:0;border:0;background:transparent;color:#a9c1d5;font-size:25px;line-height:1;font-weight:900;cursor:pointer;transition:color .15s,transform .15s}.remove-gpu:hover{color:#ff6575;transform:scale(1.18)}.remove-gpu:focus-visible{outline:1px solid #ff6575;outline-offset:-3px;border-radius:4px}.remove-cell{width:34px;min-width:34px;max-width:34px;padding:4px!important;text-align:center!important;vertical-align:middle}.remove-column-head{width:34px;min-width:34px;max-width:34px;padding:4px!important;background:#10253b!important}.already-selected td{outline:1px solid #43d9a3;outline-offset:-1px}
+.gpu-name{gap:8px}
+table{border-collapse:separate;border-spacing:0;min-width:100%;width:max-content;table-layout:auto;font-size:12px}thead th{position:sticky;top:0;z-index:2;background:#10253b;color:#9dbbd4;font-size:10px;text-transform:uppercase;letter-spacing:.45px;text-align:left;padding:10px 9px;border-bottom:1px solid #31516d;border-right:1px solid #1b354e;white-space:normal;overflow-wrap:normal;word-break:normal;line-height:1.25}tbody td{padding:11px 9px;border-bottom:1px solid #1b3046;border-right:1px solid #142a40;color:#d5e5f3;white-space:nowrap;background:#0b1929}tbody tr:nth-child(even) td{background:#0e1e30}tbody tr:hover td{background:#123149}th:first-child,td:first-child{position:sticky;left:0;z-index:4;width:34px;min-width:34px;max-width:34px}thead th:first-child{z-index:7;background:#142d45}tbody td:first-child{background:#10243a;font-weight:700}tbody tr:nth-child(even) td:first-child{background:#132a41}tbody tr:hover td:first-child{background:#16415b}thead th:nth-child(2),tbody td:nth-child(2){position:sticky;left:34px;z-index:3;min-width:210px;background:#10243a}thead th:nth-child(2){z-index:6;background:#142d45}tbody tr:nth-child(even) td:nth-child(2){background:#132a41}tbody tr:hover td:nth-child(2){background:#16415b}.gpu-name{display:flex;align-items:center;gap:10px}.gpu-mark{width:29px;height:29px;border-radius:8px;display:grid;place-items:center;background:#163b54;color:var(--cyan);font-size:10px;font-weight:900;border:1px solid #245975}.gpu-name small{display:block;color:#7f9db8;font-weight:500;font-size:10px;margin-top:4px}.badge{display:inline-block;padding:4px 7px;border-radius:5px;background:#133c35;color:#68e4b8;font-size:10px}.badge.blue{background:#13344d;color:#6bdcff}.muted{color:#7795b3}.table-bottom{display:flex;align-items:center;gap:12px;padding:8px 10px;font-size:10px;color:#7896b4;border-top:1px solid var(--line);min-height:42px;white-space:nowrap}.table-bottom .bottom-spacer{flex:1}.table-bottom .bottom-position{display:flex;align-items:center;gap:5px}.table-bottom .bottom-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px}.table-bottom .bottom-actions .btn{padding:6px 8px;font-size:10px;border-radius:7px}.table-bottom .scroll-hint{white-space:nowrap}.table-bottom #shown{margin-right:auto}.progress{height:4px;background:#14283b;border-radius:4px;width:90px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:7px}.progress i{display:block;height:100%;background:linear-gradient(90deg,#198bce,#43e0ee);border-radius:4px}
+.rightbar{display:flex;flex-direction:column;gap:12px;overflow:hidden}.right-card{padding:15px}.card-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:750;margin-bottom:13px}.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;box-shadow:0 0 10px #4de0ad88}.selected{border:1px solid #22506c;border-radius:10px;background:linear-gradient(145deg,#102b43,#0c1c2d);padding:13px;margin-bottom:10px}.selected-title{display:flex;gap:10px;align-items:center;font-weight:700;font-size:12px}.big-chip{width:39px;height:39px;border-radius:10px;background:#123b55;border:1px solid #24617d;color:var(--cyan);display:grid;place-items:center;font-weight:900}.selected p{font-size:11px;color:#8daac4;line-height:1.5;margin:10px 0}.statline{display:flex;justify-content:space-between;font-size:11px;margin-top:10px;color:#a7bfd5}.statline b{color:#e6f5ff}.meter{height:5px;background:#1a3045;border-radius:8px;margin-top:6px;overflow:hidden}.meter i{display:block;height:100%;background:linear-gradient(90deg,#178bc8,#49e0e8);border-radius:8px}.compare-empty{border:1px dashed #2b4963;border-radius:10px;padding:13px;color:#8ca9c4;font-size:11px;line-height:1.55}.tips{font-size:11px;line-height:1.6;color:#8faac3}.tips li{margin:7px 0}.tip-icon{color:var(--green);margin-right:5px}.footer-note{margin-top:auto;padding:11px 13px;color:#7594b2;font-size:10px;line-height:1.5}
+.drawing-card{display:flex;flex-direction:column;gap:0;flex:0 0 auto;height:360px;min-height:300px;padding:12px;background:linear-gradient(160deg,#10253a,#0b1929);color:#eaf4ff;overflow:hidden;border-color:#2c526f}
+.drawing-head{flex:0 0 auto;text-align:center;font-size:13px;font-weight:800;color:#d8eafa;padding:3px 2px 10px}.drawing-head small{display:block;font-size:10px;font-weight:500;color:#89a8c4;margin-top:4px}
+.drawing-paper-wrap{position:relative;flex:1;min-height:0;overflow:hidden;border:1px solid #41617d;border-radius:8px;background-color:#122a40;background-image:linear-gradient(to right,transparent 0,transparent 23px,#8e626d 24px,#8e626d 25px,transparent 26px),repeating-linear-gradient(to bottom,#122a40 0,#122a40 23px,#31516e 24px,#31516e 25px);box-shadow:inset 0 0 24px #06101b88}
+#drawingCanvas{display:block;width:100%;height:100%;touch-action:none;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 21l4.5-1L21 6.5 17.5 3 4 16.5 3 21z' fill='%23f4c542' stroke='%232b3440' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M14.5 6l3.5 3.5' stroke='%232b3440' stroke-width='1.5'/%3E%3C/svg%3E") 2 20, crosshair}
+.drawing-footer{display:flex;gap:7px;flex:0 0 auto;padding:9px 0 0}.drawing-footer .btn{flex:1;padding:8px 5px;font-size:10px}.drawing-footer .send-drawing{background:linear-gradient(135deg,#176b83,#16558b);border-color:#348ba7;color:#e8fbff}.right-actions{display:grid;grid-template-columns:1fr;gap:7px}.right-actions .btn{width:100%;text-align:center}.messenger{font-weight:800;padding:8px 10px}.messenger.max{border-color:#4b6f93;background:#142b45;color:#c9e0ff}.messenger.telegram{border-color:#28678b;background:#12364d;color:#9ad9ff}.messenger.whatsapp{border-color:#326d61;background:#14372f;color:#9ce4c8}.login-btn{background:linear-gradient(135deg,#1b9ac1,#1767ad);border-color:#38b7d9;color:white;font-weight:750}.favorites-filter{--brand-color:#d8b65d;flex:0 0 150px;max-width:180px;min-width:145px}.favorites-filter input{color:#e6ca77}.favorite-toggle{border:1px solid #6e6038;background:#2b281c;color:#e6c75d;border-radius:9px;padding:9px 12px;font-size:11px;cursor:pointer;white-space:nowrap}.favorite-toggle.active{background:#55461e;border-color:#e4c15b;color:#ffe27b;box-shadow:0 0 0 2px #e4c15b22}.favorite-star{display:block;width:100%;border:0;background:transparent;color:#9b9e9f;font-size:19px;line-height:1.05;cursor:pointer;padding:1px 0 3px}.favorite-star.is-favorite{color:#f2ce55;text-shadow:0 0 8px #e8bf4533}.favorite-star:hover{transform:scale(1.12)}.remove-cell{height:56px}.remove-cell .remove-gpu{height:26px;min-height:26px;font-size:23px}.top-help{color:#c3d8e9;font-size:13px;font-weight:750;white-space:nowrap}.top-messengers{display:flex;gap:6px;align-items:center}.topbar .top-actions{gap:8px}.navitem{cursor:pointer}.navitem:hover{background:#10263a;color:#e6f6ff}.count{display:none!important}.filter-title{display:none!important}.modal-backdrop{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;background:#020812b8;backdrop-filter:blur(5px)}.modal-backdrop.open{display:flex}.site-modal{width:min(460px,100%);padding:22px;border:1px solid #315675;border-radius:16px;background:linear-gradient(160deg,#10243a,#091522);box-shadow:0 25px 80px #0009}.site-modal h2{font-size:19px;margin:0 0 10px}.site-modal p{font-size:13px;color:#a9bfd5;line-height:1.6}.site-modal input,.site-modal textarea{width:100%;margin:6px 0;padding:11px;border:1px solid #2c4a65;border-radius:8px;background:#081727;color:#eaf4ff}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.modal-close{float:right;border:0;background:transparent;color:#9ab4ca;font-size:22px;cursor:pointer}
 
-<link rel="stylesheet" href="assets/anti-flicker.css">
+@media(max-width:1150px){.layout{grid-template-columns:185px minmax(0,1fr)}.brand{min-width:190px}.heading h1{font-size:21px}.top-help{display:none}}
+@media(max-width:760px){.layout{grid-template-columns:1fr;padding:8px}.sidebar{display:none}.topbar{padding:0 12px;gap:10px}.brand{min-width:0}.brand .brand-text{display:none}.top-actions{gap:5px}.top-messengers .messenger{display:none}.login-btn{font-size:10px;padding:7px}.heading{display:none}.heading-actions{padding-top:10px}.heading h1{font-size:20px}.filters{gap:5px}.table-top{align-items:flex-start;flex-direction:column}.table-bottom{gap:6px;padding:6px}.table-bottom .bottom-actions .btn{padding:5px 6px;font-size:9px}.table-bottom .progress{width:55px}.app{grid-template-rows:58px minmax(0,1fr)}}
+
+/* Таблица: отдельная колонка удаления и ширина колонок по содержимому */
+
+
+#gpuTable thead th:first-child{width:34px;min-width:34px;max-width:34px}
+
+
+
+
+/* Улучшение заголовков и сетки таблицы */
+#gpuTable{border-collapse:separate;border-spacing:0;table-layout:auto;width:auto;min-width:100%}
+#gpuTable thead th{
+  text-align:center!important;vertical-align:middle;padding:11px 13px!important;
+  white-space:normal!important;overflow-wrap:normal;word-break:normal;
+  line-height:1.3;
+  border-right:1px solid #34516b!important;border-bottom:1px solid #42617d!important;
+  box-shadow:inset -1px 0 0 #071523;
+}
+#gpuTable thead th:nth-child(2){text-align:center!important}
+#gpuTable thead th.remove-column-head{width:34px;min-width:34px;max-width:34px;padding:4px!important}
+#gpuTable tbody td{padding:11px 13px!important;border-right:1px solid #29435c!important;border-bottom:1px solid #263e56!important}
+/* Более компактные строки таблицы: больше видеокарт помещается на экране */
+#gpuTable tbody td{padding:6px 10px!important;line-height:1.2}
+#gpuTable tbody td.remove-cell{padding:3px!important}
+#gpuTable .gpu-mark{width:24px;height:24px;border-radius:6px}
+#gpuTable .gpu-name{gap:7px}
+#gpuTable .gpu-name small{margin-top:2px;line-height:1.15}
+#gpuTable .badge{padding:3px 6px}
+#gpuTable .remove-gpu{min-height:22px}
+#gpuTable tbody td.remove-cell{padding:4px!important;border-right:1px solid #34516b!important}
+#gpuTable thead th:last-child,#gpuTable tbody td:last-child{border-right:1px solid #34516b!important}
+
+/* Верхняя помощь и мессенджеры: единая визуальная группа */
+.top-help-group{display:flex;align-items:center;gap:15px;min-width:0;flex:1}
+.top-help{font-size:16px;font-weight:800;letter-spacing:.15px;color:#cce8f5;white-space:nowrap;animation:helpGlow 3.2s ease-in-out infinite;text-shadow:0 0 0 rgba(66,217,245,0)}
+@keyframes helpGlow{0%,100%{color:#9db9cb;text-shadow:0 0 0 rgba(66,217,245,0);opacity:.82}50%{color:#e2f8ff;text-shadow:0 0 12px rgba(66,217,245,.28);opacity:1}}
+.top-help-group .top-messengers{flex:0 0 auto}
+.topbar .top-actions{margin-left:auto;flex:0 0 auto}
+@media(max-width:1350px){.topbar{gap:14px}.top-help-group{gap:10px}.top-help{font-size:14px}.messenger{padding:7px 8px}}
+@media(max-width:1150px){.top-help{display:block}.top-help-group{gap:8px}.top-messengers .messenger{display:inline-flex}.brand{min-width:180px}}
+@media(max-width:900px){.top-help-group{gap:8px}.top-help{font-size:12px}.top-messengers{gap:4px}.messenger{font-size:10px;padding:6px}}
+@media(max-width:650px){.top-help-group{display:none}}
+@media(prefers-reduced-motion:reduce){.top-help{animation:none}}
+/* Дополнительные изменения интерфейса */
+.drawing-card{height:420px;min-height:350px}
+.top-help{font-size:15px;color:#e4f5ff;text-shadow:0 0 5px #168bff,0 0 12px #168bff;animation:helpBluePulse 1.35s ease-in-out infinite}
+@keyframes helpBluePulse{0%,100%{color:#a8dfff;text-shadow:0 0 3px #087cff,0 0 7px #087cff;opacity:.78}50%{color:#ffffff;text-shadow:0 0 7px #168bff,0 0 18px #168bff,0 0 27px #075dff;opacity:1}}
+.messenger.max{border-color:#7860ad;background:#29213e;color:#d8c6ff;box-shadow:inset 0 0 0 1px #a58bd022}
+.site-modal.rate-modal{position:relative;width:min(960px,100%);max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;padding:0;overflow:hidden}
+.site-modal.rate-modal h2{margin:0;padding:20px 56px 4px 24px;font-size:20px}
+.site-modal.rate-modal h2:before{content:'◈';margin-right:10px;color:var(--cyan)}
+.site-modal.rate-modal .modal-close{position:absolute;top:14px;right:16px;float:none}
+.site-modal.rate-modal #modalBody{flex:1;min-height:0;overflow:auto;padding:4px 24px 14px;overscroll-behavior:contain}
+.site-modal.rate-modal .modal-actions{margin:0;padding:14px 24px;border-top:1px solid #1d3850;background:#0a1828}
+.rate-sub{margin:0 0 14px;font-size:13px;line-height:1.5;color:#8fa9c4}
+.rate-hint{margin:10px 2px 0;font-size:12px;color:#6f8fad}
+.rate-row{margin:0 0 12px;padding:14px;border:1px solid #234560;border-radius:14px;background:linear-gradient(160deg,#0c2033,#091827)}
+.rate-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1.25fr) 120px;gap:12px}
+.rate-field,.rate-seg-wrap{display:flex;flex-direction:column;gap:6px;min-width:0}
+.rate-label{font-size:12px;font-weight:700;color:#8fa9c4}
+.rate-row input{width:100%;height:42px;margin:0;padding:0 12px;border:1px solid #2c4a65;border-radius:10px;background:#071523;color:#eaf4ff;font-size:13px;outline:none;transition:border-color .15s,box-shadow .15s}
+.rate-row input:focus{border-color:#42d9f5;box-shadow:0 0 0 3px #42d9f522}
+.rate-game-wrap{position:relative}
+.rate-game-wrap .rate-game{padding-right:42px}
+.rate-game-toggle{position:absolute;right:4px;top:4px;width:34px;height:34px;border:0;border-radius:8px;background:#10263a;color:#8dbbd4;font-size:14px;cursor:pointer}
+.rate-game-toggle:hover,.rate-game-toggle[aria-expanded=true]{color:#42d9f5;background:#15364d}
+.rate-suggestions{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:30;max-height:200px;overflow:auto;border:1px solid #315675;border-radius:10px;background:#071523;box-shadow:0 14px 30px #000a}
+.rate-suggestions[hidden]{display:none}
+.rate-suggestion{display:block;width:100%;padding:10px 12px;border:0;border-bottom:1px solid #16314a;background:transparent;color:#e5f5ff;font-size:13px;text-align:left;cursor:pointer}
+.rate-suggestion:last-child{border-bottom:0}
+.rate-suggestion:hover,.rate-suggestion:focus{background:#12354c;color:#63e3f5;outline:none}
+.rate-settings{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 28px;margin-top:12px;padding-top:12px;border-top:1px dashed #234560}
+.rate-seg{display:inline-flex;gap:2px;padding:3px;border:1px solid #2a4660;border-radius:10px;background:#071523}
+.rate-choice{padding:7px 14px;border:0;border-radius:7px;background:transparent;color:#a9c4da;font-size:12px;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
+.rate-choice:hover{color:#e8fbff}
+.rate-choice.active{background:#145070;color:#fff;box-shadow:inset 0 0 0 1px #42d9f555}
+.remove-rate-row{margin-left:auto;padding:8px 12px;border:1px solid #553644;border-radius:9px;background:#2a1723;color:#ff9aa8;font-size:12px;cursor:pointer}
+.remove-rate-row:hover{background:#48202e;border-color:#ff8195}
+.rate-row:only-child .remove-rate-row{display:none}
+@media(prefers-reduced-motion:reduce){.top-help{animation:none}}
+
+/* ===== v7 ===== */
+/* 1. Поля выбора: всегда одна строка, ширина подстраивается под таблицу */
+.filters{flex-wrap:nowrap;gap:clamp(4px,.7vw,10px);padding:12px clamp(8px,1vw,12px)}
+.gpu-filter,.favorites-filter{flex:1 1 0%;min-width:0;max-width:none}
+.favorites-filter{flex-grow:.8}
+.gpu-filter input{padding:0 30px 0 clamp(7px,.8vw,13px);font-size:clamp(10px,.85vw,12px);text-overflow:ellipsis;box-sizing:border-box}
+.filter-arrow{width:22px;height:22px;right:4px;top:50%;transform:translateY(-50%);padding:0;display:grid;place-items:center;line-height:1;box-sizing:border-box}
+.filter-options{width:max-content;min-width:100%;max-width:min(320px,90vw)}
+.filter-option{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gpu-filter:nth-last-child(-n+2) .filter-options{left:auto;right:0}
+
+/* 2. Перетаскивание строк */
+tbody td:nth-child(2){cursor:grab;user-select:none}
+.row-grip{flex:0 0 auto;width:9px;color:#5f84a3;font-size:15px;line-height:1;letter-spacing:-3px;touch-action:none}
+tbody tr:hover .row-grip{color:var(--cyan)}
+body.is-row-dragging,body.is-row-dragging *{cursor:grabbing!important;user-select:none}
+tr.row-dragging td{background:#173b57!important;box-shadow:0 -1px 0 #42d9f5,0 1px 0 #42d9f5,0 12px 16px -10px #000}
+tr.row-dragging td:nth-child(n+3){position:relative;z-index:1}
+tr.row-dragging td:nth-child(-n+2){z-index:5}
+/* 3. Шкалы производительности */
+[data-brand=NVIDIA]{--c1:#4f7a2a;--c2:#a6d36a}
+[data-brand=AMD]{--c1:#b5434b;--c2:#f08e93}
+[data-brand=INTEL]{--c1:#2f78ad;--c2:#7cc6f2}
+.mini-perf{display:flex;align-items:center;gap:8px;margin-top:8px}
+.mini-perf b{min-width:36px;text-align:right;font-size:10px;color:#9fc0da;font-variant-numeric:tabular-nums}
+.mini-track,.perf-track{flex:1;height:7px;border-radius:6px;background:#14283b;overflow:hidden}
+.mini-fill,.perf-fill{display:block;height:100%;width:0;min-width:3px;border-radius:6px;background:linear-gradient(90deg,var(--c1,#178bc8),var(--c2,#49e0e8));transition:width .8s cubic-bezier(.22,.8,.3,1)}
+.perf-panel{flex:0 0 auto;padding:9px 14px 10px}
+.perf-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.perf-head strong{font-size:13px}
+.perf-head span{margin-right:auto;font-size:11px;color:var(--muted)}
+.perf-head .btn{padding:4px 10px;font-size:11px}
+.perf-list{position:relative;max-height:126px;overflow-x:hidden;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#247ca2 #091726}
+.perf-panel.collapsed .perf-list,.perf-panel.collapsed .perf-empty{display:none}
+.perf-empty{font-size:11px;color:#7f9db8}
+.perf-empty[hidden]{display:none}
+.perf-row{display:grid;grid-template-columns:20px minmax(120px,220px) 1fr 52px;align-items:center;gap:10px;height:25px;font-size:12px;color:#d5e5f3;transition:transform .6s cubic-bezier(.22,.8,.3,1),opacity .35s}
+.perf-row.entering{opacity:0}
+.perf-row.leaving{position:absolute;left:0;right:0;opacity:0;pointer-events:none;transition:opacity .25s}
+.perf-rank{text-align:center;font-size:11px;color:#7f9db8}
+.perf-name{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:700}
+.perf-val{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){.mini-fill,.perf-fill,.perf-row{transition:none!important}}
+
+/* ===== v8: столбцы ===== */
+/* Ширина столбца = самое широкое значение в нём (ячейки без переноса), заголовки переносятся только между словами */
+#gpuTable thead th small{display:block;margin-top:3px;font-size:9px;font-weight:500;letter-spacing:0;text-transform:none;color:#7f9db8}
+#gpuTable thead th.nc{text-transform:none;letter-spacing:.2px}
+#gpuTable tbody td:nth-child(n+3){text-align:center;font-variant-numeric:tabular-nums}
+
+/* v12: компактнее шапка таблицы и панель выбора видеокарт */
+#gpuTable thead th{padding:5px 8px!important;line-height:1.12!important}
+#gpuTable thead th small{margin-top:1px!important;line-height:1.1!important}
+#gpuTable thead th.remove-column-head{padding:3px!important}
+.filters{padding:7px clamp(8px,1vw,12px)!important;gap:clamp(4px,.7vw,10px)!important}
+.gpu-filter input{height:32px!important;min-height:32px!important;border-radius:8px!important;box-sizing:border-box}
+.table-bottom #shown{display:none}
+
+/* ===== v17: помощь в левом блоке, адаптив (компьютеры >1150px не затронуты) ===== */
+.burger,.drawer-backdrop{display:none}
+.sidebar{overflow-y:auto;scrollbar-width:thin;scrollbar-color:#247ca2 transparent}
+.sidebar #siteFeedback{margin-top:0}
+.help-card{margin-top:auto;padding:12px;border:1px solid #22506c;border-radius:12px;background:linear-gradient(160deg,#102b43,#0b1c2d)}
+.help-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;line-height:1.3;color:#e4f5ff}
+.help-title:before{content:'';flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px #4de0ad99}
+.help-sub{margin:5px 0 10px;font-size:11px;line-height:1.45;color:#8fa9c4}
+.help-links{display:grid;gap:6px}
+.help-link{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--hc);border-radius:9px;background:var(--hb);color:var(--hf);font-size:12px;font-weight:750;text-decoration:none;transition:filter .15s,transform .15s}
+.help-link:before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
+.help-link:hover{filter:brightness(1.2);transform:translateX(2px)}
+.help-link.max{--hc:#5b4a8f;--hb:#201a35;--hf:#cdbbff}
+.help-link.tg{--hc:#28678b;--hb:#10304a;--hf:#8fd3ff}
+.help-link.wa{--hc:#2f6b5e;--hb:#12332c;--hf:#8fe3c3}
+.burger:focus-visible,.help-link:focus-visible,.rate-choice:focus-visible,.remove-rate-row:focus-visible,.rate-game-toggle:focus-visible{outline:2px solid #42d9f5;outline-offset:2px}
+@media(max-height:760px){.navitem{padding:8px 12px}.sidebar{gap:6px}}
+@media(max-width:1150px){
+ html{overflow-x:hidden;overflow-y:auto}
+ html,body{height:auto;min-height:100%}
+ body{overflow:visible}
+ html.menu-open{overflow:hidden}
+ .app{display:block;height:auto;min-height:100vh;min-height:100dvh}
+ .topbar{position:sticky;top:0;z-index:60;height:58px;gap:10px;padding:0 max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left))}
+ .burger{display:inline-flex;flex:0 0 auto;flex-direction:column;justify-content:center;gap:4px;width:40px;height:40px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:#102238;cursor:pointer}
+ .burger span{display:block;height:2px;border-radius:2px;background:#c7d9eb}
+ .brand{min-width:0}
+ .layout{display:block;overflow:visible;padding:10px max(10px,env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+ .main{overflow:visible}
+ .sidebar{display:flex;position:fixed;z-index:300;top:0;bottom:0;left:0;width:min(300px,86vw);padding:calc(16px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom));border-radius:0 16px 16px 0;transform:translateX(-105%);visibility:hidden;transition:transform .25s ease,visibility 0s .25s}
+ html.menu-open .sidebar{transform:none;visibility:visible;transition:transform .25s ease}
+ .drawer-backdrop{display:block;position:fixed;inset:0;z-index:250;background:#020812b0;opacity:0;pointer-events:none;transition:opacity .25s}
+ html.menu-open .drawer-backdrop{opacity:1;pointer-events:auto}
+ .navitem{padding:13px 12px;font-size:14px}
+ .table-panel{flex:none}
+ .table-viewport{max-height:70vh;max-height:70dvh}
+ .rightbar{display:block;margin-top:10px;overflow:visible}
+ .drawing-card{height:360px;min-height:0}
+ .scroll-hint{display:none}
+}
+@media(max-width:760px){
+ .login-more{display:none}
+ .hide-sm{display:none}
+ .topbar{height:48px;gap:8px}
+ .logo{width:28px;height:28px;border-radius:8px;font-size:10px}
+ .burger{width:34px;height:34px;padding:0 8px;gap:3px}
+ .login-btn{padding:6px 10px;font-size:11px}
+ .layout{padding:6px max(6px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}
+ .main{gap:6px}
+ .navitem{padding:10px 12px;font-size:13px}
+ .filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px!important;padding:6px!important}
+ .gpu-filter input{height:32px!important;min-height:32px!important;font-size:12px;padding:0 26px 0 8px}
+ .filter-arrow{width:22px;height:22px;right:3px;font-size:14px}
+ .filter-options{max-height:min(260px,45vh)}
+ .gpu-filter:nth-child(3) .filter-options,.gpu-filter:nth-child(6) .filter-options{left:50%;right:auto;transform:translateX(-50%)}
+ .gpu-filter:nth-child(4) .filter-options,.gpu-filter:nth-child(7) .filter-options{left:auto;right:0;transform:none}
+ #gpuTable{font-size:10.5px}
+ #gpuTable thead th{font-size:8.5px;padding:4px 5px!important}
+ #gpuTable tbody td{padding:4px 6px!important}
+ #gpuTable thead th:first-child,#gpuTable tbody td:first-child{width:28px;min-width:28px;max-width:28px}
+ #gpuTable thead th:nth-child(2),#gpuTable tbody td:nth-child(2){left:28px;width:92px;min-width:92px;max-width:92px;white-space:normal}
+ #gpuTable .gpu-mark,#gpuTable .gpu-name small{display:none}
+ #gpuTable .gpu-name{gap:4px;font-size:11px}
+ #gpuTable .mini-perf{margin-top:4px;gap:4px}.tg-head{display:flex;flex-direction:column;align-items:stretch}.tg-head .t-name{min-height:2.5em;overflow-wrap:anywhere}.tg-head .mini-perf{margin-top:auto!important;width:100%}
+ .remove-cell{height:44px}
+ .remove-cell .remove-gpu{height:20px;min-height:20px;font-size:19px}
+ .favorite-star{font-size:15px}
+ .mini-perf b{min-width:26px;font-size:9px}
+ .mini-track,.perf-track{height:5px}
+ .table-bottom{flex-wrap:wrap;white-space:normal;gap:6px;padding:5px 6px;min-height:0}
+ .table-bottom .bottom-position{width:100%}
+ .table-bottom .bottom-spacer{display:none}
+ .table-bottom .bottom-actions{width:100%;flex-wrap:nowrap}
+ .table-bottom .bottom-actions .btn{flex:1 1 auto;padding:6px 8px;font-size:10px}
+ .table-bottom .bottom-actions #clearSearch{flex:0 0 auto}
+ .tgrid{--tl:78px;--tw:100px;font-size:10.5px}
+ .tg-row>*{padding:6px}
+ .tg-row>.tg-label{font-size:8.5px}
+ .tg-head small{display:none}
+ .t-name{font-size:11px}
+ .t-btn{width:22px;height:22px}
+ .tg-head .mini-perf{margin-top:5px;gap:4px}
+ .perf-panel{padding:6px 10px 8px}
+ .perf-head{flex-wrap:wrap;gap:4px 8px;margin-bottom:4px}
+ .perf-head strong{font-size:12px}
+ .perf-head span{order:3;flex-basis:100%;margin:0;font-size:10px}
+ .perf-list{max-height:150px}
+ .perf-row{grid-template-columns:18px minmax(0,1fr) 44px;grid-template-areas:"r n v" ". t t";height:auto;row-gap:3px;padding:3px 0;font-size:11px}
+ .perf-rank{grid-area:r}.perf-name{grid-area:n}.perf-val{grid-area:v}.perf-track{grid-area:t}
+ .drawing-card{height:260px;padding:10px}
+}
+@media(max-width:640px){
+ .modal-backdrop{align-items:flex-end;padding:0}
+ .site-modal,.site-modal.rate-modal{width:100%;max-height:92vh;max-height:92dvh;border-radius:18px 18px 0 0}
+ .site-modal{overflow:auto;padding:20px 16px calc(16px + env(safe-area-inset-bottom))}
+ .site-modal input,.site-modal textarea{font-size:14px}
+ .site-modal.rate-modal h2{padding:18px 52px 2px 16px;font-size:18px}
+ .site-modal.rate-modal #modalBody{padding:4px 14px 10px}
+ .site-modal.rate-modal .modal-actions{padding:12px 14px calc(12px + env(safe-area-inset-bottom))}
+ .rate-row input{font-size:14px}
+ .rate-grid{grid-template-columns:1fr}
+ .rate-seg-wrap{width:100%}
+ .rate-seg{display:flex}
+ .rate-choice{flex:1;padding:10px 6px}
+ .remove-rate-row{width:100%;margin-left:0}
+}
+@media(prefers-reduced-motion:reduce){.sidebar,.drawer-backdrop{transition:none!important}}
+
+/* ===== v18: ориентация таблицы, кнопки под таблицей ===== */
+.table-panel:not(.orient-h) #gridT,.table-panel.orient-h #gpuTable{display:none}
+.tgrid{--tl:132px;--tw:128px;display:grid;grid-template-columns:minmax(min-content,var(--tl)) repeat(var(--n,1),minmax(var(--tw),1fr));width:max(100%,calc(var(--tl) + var(--n,1)*var(--tw)));background:#0b1929;font-size:12px;color:#d5e5f3}
+.tg-row{display:contents}
+.tg-row>*{min-width:0;padding:9px 10px;border-right:1px solid #29435c;border-bottom:1px solid #263e56;background:#0b1929}
+.tg-row.alt>*{background:#0e1e30}
+.tg-row>.tg-corner,.tg-row>.tg-head{position:sticky;top:0;z-index:3;background:#142d45;text-align:center}
+.tg-row>.tg-corner{left:0;z-index:5}
+.tg-row>.tg-label{position:sticky;left:0;z-index:2;background:#10253b;color:#9dbbd4;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;line-height:1.25}
+.tg-row.alt>.tg-label{background:#122a42}
+.tg-label.nc{text-transform:none;letter-spacing:.2px}
+.tg-label small{display:block;margin-top:3px;font-size:9px;font-weight:500;letter-spacing:0;text-transform:none;color:#7f9db8}
+.tg-cell{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.3;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.tg-head{cursor:grab;user-select:none}
+.tg-row>.tg-head.col-dragging{background:#1b4764}
+.t-empty{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#8fa9c4;cursor:default}
+.t-acts{display:flex;align-items:center;gap:2px;margin:-3px -4px 3px}
+.t-grip{margin-right:auto;padding-left:2px;color:#5f84a3;font-size:14px;line-height:1;letter-spacing:-3px;cursor:grab;touch-action:none}
+.t-btn{width:24px;height:24px;padding:0;border:0;border-radius:6px;background:transparent;color:#a9c1d5;font-size:18px;line-height:1;cursor:pointer}
+.t-btn:hover{color:#ff6575}
+.t-btn.fav{font-size:15px;color:#9b9e9f}
+.t-btn.fav:hover,.t-btn.fav.is-favorite{color:#f2ce55}
+.t-name{display:block;font-size:12px;font-weight:800;line-height:1.2}
+.tg-head[data-brand=NVIDIA] .t-name{color:#8cae62}
+.tg-head[data-brand=AMD] .t-name{color:#d47a7f}
+.tg-head[data-brand=INTEL] .t-name{color:#72a9d0}
+.tg-head small{display:block;margin-top:3px;font-size:9.5px;font-weight:500;color:#7f9db8}
+.btn svg{vertical-align:-2px}
+.btn[aria-pressed=true]{border-color:#36c4e7;background:#12425a;color:#fff}
+#orientToggle svg{margin-right:5px}
+#clearSearch{display:inline-flex;align-items:center;justify-content:center;padding:6px 9px}
+#clearSearch:hover{color:#ff7a89;border-color:#7a3a48}
+@supports(-webkit-touch-callout:none){.site-modal input,.site-modal textarea,.rate-row input{font-size:16px}@media(max-width:760px){.gpu-filter input{font-size:16px}}}
+
+/* v19: темы, более ровные шкалы и инструменты заметок */
+.theme-picker-label{font-size:11px;color:var(--muted)}.theme-picker{max-width:120px;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);font-size:11px;min-width:0}
+body.theme-mono{--bg:#101010;--panel:#1a1a1a;--panel2:#252525;--line:#444;--text:#f4f4f4;--muted:#b7b7b7;--cyan:#fff;--blue:#777;--green:#ddd;--yellow:#eee;background:#111;color:#f4f4f4}
+body.theme-mono .panel,body.theme-mono .sidebar,body.theme-mono .right-card{background:#191919;border-color:#444}body.theme-mono .topbar{background:#111;border-color:#444}body.theme-mono .btn,body.theme-mono .chip,body.theme-mono .theme-picker{background:#292929;color:#f4f4f4;border-color:#555}body.theme-mono tbody td,body.theme-mono .tg-row>*{background:#181818;color:#eee}body.theme-mono thead th,body.theme-mono .tg-row>.tg-head{background:#303030;color:#eee}body.theme-mono .mini-fill,body.theme-mono .perf-fill{background:linear-gradient(90deg,#777,#eee)}
+body.theme-light{--bg:#edf2f7;--panel:#fff;--panel2:#f2f5f8;--line:#c7d2df;--text:#172536;--muted:#5d7084;--cyan:#087fa3;--blue:#247bb5;--green:#16825e;background:#edf2f7;color:#172536}body.theme-light .panel,body.theme-light .right-card{background:#fff;border-color:#c7d2df}body.theme-light .topbar{background:#fff}body.theme-light .btn,body.theme-light .theme-picker{background:#edf3f8;color:#172536;border-color:#b8c8d8}body.theme-light .gpu-filter input,body.theme-light .rate-row input{background:#fff;color:#172536}body.theme-light tbody td,body.theme-light .tg-row>*{background:#fff;color:#172536}body.theme-light thead th,body.theme-light .tg-row>.tg-head{background:#e5edf5;color:#25394d}body.theme-light .drawing-paper-wrap{background-color:#fff;background-image:linear-gradient(to right,transparent 0,transparent 23px,#e7b6bf 24px,#e7b6bf 25px,transparent 26px),repeating-linear-gradient(to bottom,#fff 0,#fff 23px,#dce5ee 24px,#dce5ee 25px)}
+body.theme-purple{--bg:#100c20;--panel:#1b1430;--panel2:#281d40;--line:#483663;--text:#f3eaff;--muted:#b4a1cf;--cyan:#d6a5ff;--blue:#8b5bd1;--green:#8fe3c0;background:#100c20;color:#f3eaff}body.theme-purple .panel,body.theme-purple .right-card{background:#1b1430;border-color:#483663}body.theme-purple .topbar{background:#130e23}
+body.theme-forest{--bg:#081812;--panel:#10261d;--panel2:#173528;--line:#285440;--text:#e6f7ec;--muted:#9bbca7;--cyan:#77e5b4;--blue:#2b9a72;--green:#80e4ad;background:#081812;color:#e6f7ec}body.theme-forest .panel,body.theme-forest .right-card{background:#10261d;border-color:#285440}body.theme-forest .topbar{background:#091b13}
+.perf-panel{border:0!important;box-shadow:none!important;background:transparent!important;border-radius:0!important;padding:0 4px 6px!important}.perf-panel .perf-head{display:none!important}.perf-list{max-height:126px}
+#orientToggle{width:34px;height:30px;padding:5px!important;display:inline-flex;align-items:center;justify-content:center}#orientToggle svg{margin:0!important;width:18px;height:18px}.table-bottom .scroll-hint{font-size:19px;line-height:1;color:var(--cyan)}.table-bottom .bottom-position{min-width:30px;justify-content:center}.icon-only{width:34px;height:30px;padding:5px!important;display:inline-flex;align-items:center;justify-content:center}
+.remove-gpu{font-size:0!important}.remove-gpu svg{width:15px;height:15px;display:block;margin:auto}.remove-gpu:hover{color:#ff6575!important}.t-btn.rm{display:inline-flex;align-items:center;justify-content:center}.t-btn.rm svg{width:15px;height:15px}.t-btn.rm:hover{color:#ff6575}
+.drawing-share-actions{display:flex;gap:10px;flex-wrap:wrap}.drawing-share-actions .btn{flex:1;min-width:140px}.drawing-tools{display:flex;gap:5px;padding:0 0 7px;flex:0 0 auto}.drawing-tool{display:inline-flex;align-items:center;justify-content:center;min-width:31px;height:29px;padding:4px 8px;font-size:14px}.drawing-tool.active{background:#145070;border-color:#42d9f5;color:#fff}.drawing-card{height:440px}.drawing-paper-wrap{flex:1;min-height:100px}.drawing-footer .btn{font-size:11px}.drawing-card #drawingCanvas{display:block;width:100%;height:100%;touch-action:none;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 21l4.5-1L21 6.5 17.5 3 4 16.5 3 21z' fill='%23f4c542' stroke='%232b3440' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M14.5 6l3.5 3.5' stroke='%232b3440' stroke-width='1.5'/%3E%3C/svg%3E") 2 20, crosshair}.drawing-card.text-mode #drawingCanvas{cursor:text}.drawing-text-editor{position:absolute;z-index:5;min-width:90px;max-width:calc(100% - 12px);min-height:28px;padding:2px 4px;border:1px dashed #42d9f5;border-radius:3px;background:#f5fbff;color:#17364e;font:16px/1.35 Segoe UI,Arial,sans-serif;outline:0;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 0 0 2px #42d9f522}.drawing-text-editor:empty:before{content:"Введите текст…";color:#7b93a6;pointer-events:none}
+.mini-perf{min-height:16px;margin-top:6px!important}.gpu-name{align-items:flex-start!important}.gpu-name>span:last-child{display:flex;flex-direction:column;min-width:0}.gpu-name .mini-perf{margin-top:auto!important;width:100%}.gpu-name .brand-name{display:block;min-height:2.4em;line-height:1.2;overflow-wrap:anywhere}.gpu-name .mini-perf .mini-track{min-width:0}.gpu-name .mini-perf b{flex:0 0 30px}
+@media(max-width:1150px){.theme-picker-label{display:none}.theme-picker{max-width:100px;padding:6px 4px;font-size:10px}.drawing-card{height:380px}}
+@media(max-width:760px){.theme-picker{max-width:92px;font-size:10px}.top-actions{gap:5px}.mini-perf{margin-top:auto!important}.gpu-name .brand-name{min-height:2.5em;font-size:10.5px}.gpu-name .mini-perf{margin-top:auto!important}.perf-panel{padding:0 2px 5px!important}.perf-list{max-height:150px}.drawing-card{height:320px}.drawing-tools{gap:4px}.drawing-tool{height:32px;min-width:36px}}
+@media(max-width:420px){.theme-picker{max-width:82px}.login-btn{font-size:10px;padding:5px 7px}.drawing-footer{gap:5px}.drawing-footer .btn{padding:8px 3px;font-size:10px}}
+
+/* v21: thinner pencil cursor and readable inline text in every theme */
+.drawing-card #drawingCanvas{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 21l4.5-1L21 6.5 17.5 3 4 16.5 3 21z' fill='%23f4c542' stroke='%232b3440' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpath d='M14.5 6l3.5 3.5' stroke='%232b3440' stroke-width='1.1'/%3E%3C/svg%3E") 2 20, crosshair}
+.drawing-text-editor{background:#13263a;color:#fff;caret-color:#fff;border-color:var(--cyan)}
+.drawing-text-editor:empty:before{color:#aebfd0}
+body.theme-mono .drawing-text-editor,body.theme-purple .drawing-text-editor,body.theme-forest .drawing-text-editor{background:#151515;color:#fff;caret-color:#fff}
+body.theme-light .drawing-text-editor{background:#fff;color:#111;caret-color:#111;border-color:#087fa3}
+body.theme-light .drawing-text-editor:empty:before{color:#6d7c8b}
+
+#gpuTable tbody tr[data-catalog="1"]{display:none}
+
+/* v22 compact gpu column */
+@media(min-width:761px){#gpuTable tbody td:nth-child(2) .gpu-name{gap:6px;align-items:center!important}#gpuTable .gpu-mark{width:23px;height:23px;border-radius:5px;font-size:9px;flex:0 0 23px}#gpuTable .gpu-name small{display:block!important;font-size:9px;line-height:1.1;margin-top:2px;white-space:nowrap;color:var(--muted,#8da7c0)!important}#gpuTable .gpu-name .brand-name{min-height:0!important;line-height:1.15;font-size:11px;white-space:nowrap;overflow-wrap:normal}#gpuTable tbody td:nth-child(2){min-width:165px!important;width:165px;padding:7px 8px!important}}
+.drawing-text-editor{background:var(--draw-editor-bg,#f5fbff);color:var(--draw-editor-color,#17364e);caret-color:var(--draw-editor-color,#17364e)}
+body:not(.theme-light):not(.theme-bw) .drawing-text-editor{--draw-editor-bg:#f5fbff;--draw-editor-color:#17364e}
+body.theme-dark .drawing-text-editor,body.theme-ocean .drawing-text-editor,body.theme-purple .drawing-text-editor,body.theme-green .drawing-text-editor,body.theme-bw:not(.theme-light) .drawing-text-editor{--draw-editor-bg:#101820;--draw-editor-color:#fff}
+
+/* v23 gpu subtitle and brush */
+@media(min-width:761px){#gpuTable tbody td:nth-child(2) .gpu-name{align-items:center!important;gap:6px}#gpuTable tbody td:nth-child(2) .gpu-name>span:last-child{min-width:0}#gpuTable tbody td:nth-child(2) .gpu-name small{display:block!important;font-size:9px;line-height:1.1;margin-top:2px;white-space:nowrap;color:#8da7c0!important}#gpuTable tbody td:nth-child(2) .gpu-name .brand-name{display:block;white-space:nowrap;font-size:11px}}
+
+/* umo-v25 */
+/* uMo: логотип и фирменный текст */
+.logo{font-size:14px;letter-spacing:-.2px}
+.brand-text{display:flex;align-items:center;gap:10px;height:34px}
+.bt-sub{display:block;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:1.5px;line-height:17px;text-transform:uppercase;white-space:nowrap}
+.bt-name{font-size:36px;line-height:34px;font-weight:800;letter-spacing:.3px;color:var(--text);white-space:nowrap}
+.bt-name span{color:var(--cyan)}
+#clearDrawing:hover{color:#ff7a89;border-color:#7a3a48}
+/* уведомление о cookie */
+.cookie-bar{display:none;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:900;max-width:760px;margin:0 auto;padding:12px 14px;gap:14px;align-items:center;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--text);box-shadow:0 12px 40px #0009;font-size:12px;line-height:1.5}
+.cookie-bar.show{display:flex}
+.cookie-bar p{margin:0;flex:1;min-width:0}
+.cookie-actions{display:flex;gap:8px;flex:0 0 auto}
+@media(max-width:760px){
+ .logo{font-size:10.5px;letter-spacing:-.1px}
+ .brand .brand-text{display:flex;gap:7px;height:28px}
+ .bt-sub{font-size:8.5px;line-height:14px;letter-spacing:1px}
+ .bt-name{font-size:29px;line-height:28px}
+}
+@media(max-width:520px){.cookie-bar.show{flex-direction:column;align-items:stretch;gap:8px;padding:10px 12px;font-size:11.5px;line-height:1.4}.cookie-actions{justify-content:flex-end}.cookie-actions .btn{padding:7px 12px;font-size:11px}}
+@media(max-width:359px){html:not(.off-brandname) .bt-sub{display:none}}
+</style>
+
+<style>
+/* v24 focused refinements */
+.faq-page{max-width:100%;line-height:1.65;color:var(--text,#dce9f5)}
+.faq-page .faq-intro{font-size:1.02em;color:var(--muted,#8fa9c0);margin:0 0 18px}
+.faq-page h2{font-size:1.08em;margin:22px 0 6px;color:var(--accent,#42d9f5)}
+.faq-page p{margin:0 0 10px}
+/* FAQ opens as a dedicated, scrollable reading page rather than a tiny dialog */
+.site-modal.faq-reading{width:min(900px,94vw);max-height:90vh;overflow-y:auto;padding:28px}
+.site-modal.faq-reading h2{font-size:24px;line-height:1.25;margin:0 40px 18px 0}
+@media(max-width:640px){.site-modal.faq-reading{width:100%;max-height:94vh;max-height:94dvh;padding:24px 16px calc(18px + env(safe-area-inset-bottom));border-radius:18px 18px 0 0}.site-modal.faq-reading h2{font-size:20px}}
+/* The light theme uses light page, cards, table and drawing canvas surroundings */
+body[data-theme="light"],body.theme-light{--bg:#f3f6fa;--panel:#ffffff;--panel2:#eaf0f6;--text:#152334;--muted:#596b7d;--line:#ccd7e2;--accent:#087ea4;background:#f3f6fa!important;color:#152334!important}
+body[data-theme="light"] .panel,body.theme-light .panel,body[data-theme="light"] .sidebar,body.theme-light .sidebar,body[data-theme="light"] .right-card,body.theme-light .right-card,body[data-theme="light"] .filters,body.theme-light .filters,body[data-theme="light"] .table-panel,body.theme-light .table-panel{background:#fff!important;color:#152334!important;border-color:#ccd7e2!important}
+body[data-theme="light"] .main,body.theme-light .main,body[data-theme="light"] .layout,body.theme-light .layout,body[data-theme="light"] .content,body.theme-light .content{background:#f3f6fa!important}
+body[data-theme="light"] input,body.theme-light input,body[data-theme="light"] textarea,body.theme-light textarea{background:#fff!important;color:#152334!important;border-color:#ccd7e2!important}
+/* Column orientation: reserve equal space for GPU names so performance scales line up */
+.tg-head{min-height:132px}
+.tg-head .t-name{min-height:42px;display:flex;align-items:flex-start;justify-content:center}
+.tg-head .mini-perf{margin-top:auto!important}
+@media(max-width:760px){.drawing-tool.active{background:var(--accent,#42d9f5)!important;color:#07111f!important;border-color:var(--accent,#42d9f5)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--accent,#42d9f5) 30%,transparent);font-weight:900}.drawing-tool{min-width:36px}}
+</style>
 </head><body>
 <div class="app">
 <header class="topbar"><button class="burger" id="menuToggle" type="button" aria-label="Меню" aria-expanded="false"><span></span><span></span><span></span></button><div class="brand"><div class="logo">uMo</div><div class="brand-text"><span class="bt-sub">сравнение<br>видеокарт</span><span class="bt-name" data-feature="brandname">у <span>Мо</span></span></div></div><div class="top-actions"><label class="theme-picker-label" for="themePicker" aria-label="Цветовая тема">Тема</label><select id="themePicker" class="theme-picker" aria-label="Выбрать тему"><option value="default">Океан</option><option value="mono">Чёрно-белая</option><option value="light">Светлая</option><option value="purple">Фиолетовая</option><option value="forest">Зелёная</option></select><button class="btn login-btn" id="loginButton" data-feature="login">Войти<span class="login-more"> / Зарегистрироваться</span></button></div></header>
@@ -60,6 +466,638 @@ if(off.length){var s=document.createElement('style');s.textContent=off.map(funct
 </div></div>
 <div class="cookie-bar" id="cookieBar" data-feature="cookies" role="region" aria-label="Уведомление об использовании cookie"><p>Сайт использует cookie и память браузера, чтобы запоминать ваши настройки: тему, избранное и заметки. Продолжая пользоваться сайтом, вы соглашаетесь с этим.</p><div class="cookie-actions"><button class="btn" id="cookieMore" type="button">Подробнее</button><button class="btn primary" id="cookieOk" type="button">Понятно</button></div></div>
 <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="site-modal"><button class="modal-close" id="modalClose" aria-label="Закрыть">×</button><h2 id="modalTitle">Связаться с GPU Compare</h2><div id="modalBody"></div><div class="modal-actions"><button class="btn" id="modalCancel">Закрыть</button><button class="btn primary" id="modalSubmit">Продолжить</button></div></div></div>
-<script src="assets/main.js"></script>
+<script>
+const viewport=document.getElementById('viewport'), table=document.getElementById('gpuTable');
+let activeFilter='all', hoverMode=true, raf=0;
+// Position-based scroll: cursor at the viewport's center = table's center;
+// cursor left/right of center moves the horizontal view proportionally.
+viewport.addEventListener('pointermove', (event) => {
+    if (window.rowDragging || event.pointerType !== 'mouse') return;
+    const rect = viewport.getBoundingClientRect();
+
+    // Интерактивная зона: от 25% до 92% ширины. Правее 92% — сразу конец таблицы.
+    // (Раньше конец был только в последних 1% ширины — это ~10 px у самого края, где ещё и полоса прокрутки:
+    //  при быстром движении мыши или другой ширине полосы до конца таблицы можно было не доехать.)
+    const zoneStart = rect.width * 0.25;
+    const zoneEnd = rect.width * 0.92;
+
+    // Положение мыши относительно левого края таблицы
+    const mouseX = event.clientX - rect.left;
+
+    // Левее зоны прокрутка не управляется (как и раньше — там закреплённые столбцы)
+    if (mouseX < zoneStart) {
+        return;
+    }
+
+    // Преобразуем положение мыши в диапазон от 0 до 1 (правее зоны — 1, то есть конец таблицы)
+    const progress = Math.min(1, (mouseX - zoneStart) / (zoneEnd - zoneStart));
+
+    // Прокручиваем таблицу слева направо
+    const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+    viewport.scrollLeft = progress * maxScroll;
+});
+viewport.addEventListener('pointerleave',()=>{if(raf)cancelAnimationFrame(raf)});
+
+
+const filterBoxes = [...document.querySelectorAll('.gpu-filter')];
+const catalogRows = [...table.querySelectorAll('tbody tr')];
+let selectedModel = '';
+// Каталог хранится в строках таблицы, но до выбора модели они не участвуют в сравнении.
+catalogRows.forEach(tr => { tr.dataset.selected = 'false'; tr.setAttribute('data-catalog', '1'); });
+function rowsForScope(scope) {
+  return catalogRows.filter(tr => {
+    if (scope === 'all') return true;
+    if (scope === 'favorites') return tr.dataset.favorite === 'true';
+    if (scope === 'retro') return tr.dataset.year !== '' && Number(tr.dataset.year) < 2015;
+    return tr.dataset.brand === scope;
+  });
+}
+function closeFilterMenus(except) {
+  filterBoxes.forEach(box => { if (box !== except) box.classList.remove('open'); });
+}
+function updateCounts() {
+  const selected = catalogRows.filter(tr => tr.dataset.selected === 'true');
+  const shown = document.getElementById('shown');
+  if (shown) shown.textContent = 'В сравнении ' + selected.length + ' видеокарт · в базе ' + catalogRows.length;
+  if (perfReady) renderPerf();
+  if (tReady) renderT();
+}
+const favoriteStorageKey = 'gpuCompareFavoritesV1';
+let favoriteNames = new Set();
+try { favoriteNames = new Set(JSON.parse(localStorage.getItem(favoriteStorageKey) || '[]')); } catch(e) {}
+function persistFavorites() { try { localStorage.setItem(favoriteStorageKey, JSON.stringify([...favoriteNames])); } catch(e) {} }
+function gpuName(tr) { return tr.querySelector('.brand-name').textContent.trim(); }
+function renderRemoveCell(tr) {
+  const cell = tr.querySelector('.remove-cell');
+  cell.replaceChildren();
+  if (tr.dataset.selected === 'true') {
+    const remove = document.createElement('button');
+    remove.type = 'button'; remove.className = 'remove-gpu'; remove.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"/></svg>';
+    remove.title = 'Убрать видеокарту из сравнения';
+    remove.setAttribute('aria-label', 'Убрать ' + gpuName(tr) + ' из сравнения');
+    remove.addEventListener('click', () => { tr.dataset.selected = 'false'; tr.setAttribute('data-catalog', '1'); renderRemoveCell(tr); updateCounts(); });
+    cell.appendChild(remove);
+  }
+  const star = document.createElement('button');
+  star.type = 'button'; star.className = 'favorite-star' + (tr.dataset.favorite === 'true' ? ' is-favorite' : '');
+  star.textContent = tr.dataset.favorite === 'true' ? '★' : '☆';
+  star.title = tr.dataset.favorite === 'true' ? 'Убрать из избранного' : 'Добавить в избранное';
+  star.setAttribute('aria-label', star.title + ': ' + gpuName(tr));
+  star.addEventListener('click', () => {
+    const name = gpuName(tr);
+    if (favoriteNames.has(name)) favoriteNames.delete(name); else favoriteNames.add(name);
+    tr.dataset.favorite = favoriteNames.has(name) ? 'true' : 'false';
+    persistFavorites(); renderRemoveCell(tr);
+    filterBoxes.forEach(box => { if (box.dataset.scope === 'favorites' && box.classList.contains('open')) updateFilterOptions(box); });
+  });
+  cell.appendChild(star);
+}
+
+function addGpu(tr) {
+  if (tr.dataset.selected === 'true') {
+    tr.removeAttribute('data-catalog');
+    tr.classList.add('already-selected');
+    setTimeout(() => tr.classList.remove('already-selected'), 650);
+    return;
+  }
+  tr.dataset.selected = 'true';
+  table.tBodies[0].appendChild(tr);
+  tr.removeAttribute('data-catalog');
+  renderRemoveCell(tr);
+  updateCounts();
+}
+
+// Счётчик популярности: шлём id карты в track.php, обновляем data-popularity локально.
+function bumpPopularity(tr) {
+  const id = tr.dataset.id;
+  if (!id) return;
+  try {
+    fetch('track.php', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: 'id=' + encodeURIComponent(id)}).catch(() => {});
+    tr.dataset.popularity = String(Number(tr.dataset.popularity || 0) + 1);
+  } catch (e) {}
+}
+
+function updateFilterOptions(box) {
+  const input = box.querySelector('input');
+  const options = box.querySelector('.filter-options');
+  const q = input.value.trim().toLowerCase();
+  const matches = rowsForScope(box.dataset.scope).filter(tr => {
+    const name = tr.querySelector('.brand-name').textContent.toLowerCase();
+    return name.includes(q) || tr.dataset.year.includes(q) || tr.dataset.brand.toLowerCase().includes(q);
+  });
+  // Сортировка: сначала самые популярные (больше раз выбирали), затем более короткие названия.
+  matches.sort((a, b) => (Number(b.dataset.popularity || 0) - Number(a.dataset.popularity || 0))
+                      || (a.querySelector('.brand-name').textContent.length - b.querySelector('.brand-name').textContent.length));
+  options.innerHTML = '';
+  if (!matches.length) {
+    const empty = document.createElement('div');
+    empty.className = 'filter-option';
+    empty.textContent = box.dataset.scope === 'favorites' ? 'Пока нет избранных видеокарт' : 'Ничего не найдено';
+    empty.style.cursor = 'default';
+    options.appendChild(empty);
+    return;
+  }
+  matches.forEach(tr => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'filter-option';
+    item.textContent = (tr.dataset.selected === 'true' ? '✓ ' : '+ ') + (tr.dataset.favorite === 'true' ? '★ ' : '') + tr.querySelector('.brand-name').textContent;
+    item.addEventListener('click', () => {
+      addGpu(tr);
+      bumpPopularity(tr); // увеличиваем счётчик выборов на сервере
+      // Текст запроса (например, «5090») остаётся в поле — можно выбрать следующую карту из того же списка.
+      closeFilterMenus(null);
+      updateCounts();
+    });
+    options.appendChild(item);
+  });
+}
+filterBoxes.forEach(box => {
+  const input = box.querySelector('input');
+  const arrow = box.querySelector('.filter-arrow');
+  input.addEventListener('focus', () => { closeFilterMenus(box); updateFilterOptions(box); box.classList.add('open'); });
+  input.addEventListener('input', () => {
+    selectedModel = '';
+    closeFilterMenus(box);
+    updateFilterOptions(box);
+    box.classList.add('open');
+  });
+  arrow.addEventListener('click', () => {
+    const wasOpen = box.classList.contains('open');
+    closeFilterMenus(box);
+    if (!wasOpen) { updateFilterOptions(box); box.classList.add('open'); if (!matchMedia('(hover:none)').matches) input.focus(); }
+  });
+  input.addEventListener('keydown', event => {
+    if (event.key === 'Escape') box.classList.remove('open');
+    if (event.key === 'Enter') {
+      const first = box.querySelector('.filter-option');
+      if (first && first.tagName === 'BUTTON') first.click();
+    }
+  });
+});
+document.addEventListener('click', event => {
+  if (!event.target.closest('.gpu-filter')) closeFilterMenus(null);
+});
+document.getElementById('clearSearch').addEventListener('click', () => {
+  filterBoxes.forEach(box => { box.querySelector('input').value = ''; box.classList.remove('open'); });
+  catalogRows.forEach(tr => { tr.dataset.selected = 'false'; tr.setAttribute('data-catalog', '1'); renderRemoveCell(tr); });
+  updateCounts();
+});
+
+function applyFilters() { updateCounts(); }
+updateCounts();
+// Рисовалка: карандаш с курсором, текст прямо на листе и надёжная отмена.
+const drawingCanvas = document.getElementById('drawingCanvas');
+const drawingCtx = drawingCanvas.getContext('2d');
+const drawingCard = document.querySelector('.drawing-card');
+const drawingPaper = document.querySelector('.drawing-paper-wrap');
+let drawing = false, erasing = false, lastPoint = null, drawingMode = 'draw';
+let drawingHistory = [];
+const drawingStorageKey = 'gpuCompareDrawingNoteV1';
+function saveDrawingSnapshot(){try{drawingHistory.push(drawingCtx.getImageData(0,0,drawingCanvas.width,drawingCanvas.height));if(drawingHistory.length>50)drawingHistory.shift();}catch(e){}}
+function restoreDrawingSnapshot(data){if(!data)return;drawingCtx.save();drawingCtx.setTransform(1,0,0,1,0,0);drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height);drawingCtx.putImageData(data,0,0);drawingCtx.restore();}
+function undoDrawing(){if(!drawingHistory.length)return;restoreDrawingSnapshot(drawingHistory.pop());}
+function resizeDrawingCanvas(){
+  const rect=drawingCanvas.getBoundingClientRect();if(!rect.width||!rect.height)return;
+  const oldCanvas=document.createElement('canvas');oldCanvas.width=drawingCanvas.width;oldCanvas.height=drawingCanvas.height;
+  if(oldCanvas.width&&oldCanvas.height)oldCanvas.getContext('2d').drawImage(drawingCanvas,0,0);
+  const dpr=window.devicePixelRatio||1;drawingCanvas.width=Math.round(rect.width*dpr);drawingCanvas.height=Math.round(rect.height*dpr);
+  drawingCtx.setTransform(dpr,0,0,dpr,0,0);drawingCtx.lineCap='round';drawingCtx.lineJoin='round';
+  if(oldCanvas.width&&oldCanvas.height)drawingCtx.drawImage(oldCanvas,0,0,oldCanvas.width,oldCanvas.height,0,0,rect.width,rect.height);
+  drawingHistory=[];
+}
+function getDrawingPoint(event){const rect=drawingCanvas.getBoundingClientRect();return{x:event.clientX-rect.left,y:event.clientY-rect.top};}
+function getDrawingTextColor(){return document.body.classList.contains('theme-light')?'#111111':'#ffffff';}
+function setDrawingMode(mode){const activeEditor=drawingPaper.querySelector('.drawing-text-editor');if(activeEditor)finishInlineText(activeEditor,true);drawingMode=mode;drawingCard.classList.toggle('text-mode',mode==='text');document.getElementById('drawTool').classList.toggle('active',mode==='draw');document.getElementById('textTool').classList.toggle('active',mode==='text');document.getElementById('drawTool').setAttribute('aria-pressed',String(mode==='draw'));document.getElementById('textTool').setAttribute('aria-pressed',String(mode==='text'));}
+function finishInlineText(editor,commit=true){
+  if(!editor||!editor.isConnected)return;
+  const text=editor.innerText.replace(/\u00a0/g,' ').trim();
+  try{if(commit&&text){saveDrawingSnapshot();const rect=drawingCanvas.getBoundingClientRect();const x=parseFloat(editor.dataset.x)||0,y=parseFloat(editor.dataset.y)||0;drawingCtx.save();drawingCtx.fillStyle=getDrawingTextColor();drawingCtx.font='16px Segoe UI, Arial, sans-serif';const lines=text.split('\n');lines.forEach((line,i)=>drawingCtx.fillText(line,x,y+16+i*21,Math.max(30,rect.width-x-8)));drawingCtx.restore();}}catch(err){console.error('Не удалось сохранить текст на листе',err);}finally{editor.remove();}
+}
+drawingPaper.addEventListener('pointerdown',e=>{const editor=drawingPaper.querySelector('.drawing-text-editor');if(editor&&!editor.contains(e.target)&&e.target!==drawingCanvas)finishInlineText(editor,true);});
+drawingCanvas.addEventListener('contextmenu',e=>e.preventDefault());
+drawingCanvas.addEventListener('pointerdown',event=>{
+  if(drawingMode==='text'){
+    event.preventDefault();const point=getDrawingPoint(event);
+    const existing=drawingPaper.querySelector('.drawing-text-editor');if(existing)finishInlineText(existing,true);
+    const editor=document.createElement('div');editor.className='drawing-text-editor';editor.contentEditable='true';editor.setAttribute('role','textbox');editor.setAttribute('aria-label','Текст заметки');editor.dataset.x=String(Math.max(4,Math.min(point.x,drawingCanvas.clientWidth-100)));editor.dataset.y=String(Math.max(0,Math.min(point.y,drawingCanvas.clientHeight-24)));editor.style.left=editor.dataset.x+'px';editor.style.top=editor.dataset.y+'px';editor.style.setProperty('--draw-editor-bg',document.body.classList.contains('theme-light')?'#ffffff':'#101820');editor.style.setProperty('--draw-editor-color',document.body.classList.contains('theme-light')?'#111111':'#ffffff');drawingPaper.appendChild(editor);editor.focus();
+    editor.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();finishInlineText(editor,false);drawingCanvas.focus();}else if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();finishInlineText(editor,true);drawingCanvas.focus();}else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undoDrawing();}});
+    editor.addEventListener('blur',()=>finishInlineText(editor,true),{once:true});return;
+  }
+  if(event.button!==0&&event.button!==2)return;event.preventDefault();saveDrawingSnapshot();drawing=true;erasing=event.button===2;lastPoint=getDrawingPoint(event);drawingCanvas.setPointerCapture(event.pointerId);
+  drawingCtx.globalCompositeOperation=erasing?'destination-out':'source-over';drawingCtx.beginPath();drawingCtx.arc(lastPoint.x,lastPoint.y,erasing?12:1.4,0,Math.PI*2);drawingCtx.fillStyle='#c4dff7';drawingCtx.fill();drawingCtx.beginPath();drawingCtx.moveTo(lastPoint.x,lastPoint.y);
+});
+drawingCanvas.addEventListener('pointermove',event=>{if(!drawing||!lastPoint)return;const point=getDrawingPoint(event);drawingCtx.globalCompositeOperation=erasing?'destination-out':'source-over';drawingCtx.strokeStyle='#c4dff7';drawingCtx.lineWidth=erasing?24:2.4;drawingCtx.lineTo(point.x,point.y);drawingCtx.stroke();drawingCtx.beginPath();drawingCtx.moveTo(point.x,point.y);lastPoint=point;});
+function stopDrawing(){drawing=false;lastPoint=null;drawingCtx.beginPath();drawingCtx.globalCompositeOperation='source-over';}
+drawingCanvas.addEventListener('pointerup',stopDrawing);drawingCanvas.addEventListener('pointercancel',stopDrawing);drawingCanvas.addEventListener('lostpointercapture',stopDrawing);
+document.getElementById('drawTool').addEventListener('click',()=>setDrawingMode('draw'));document.getElementById('textTool').addEventListener('click',()=>setDrawingMode('text'));document.getElementById('undoDrawing').addEventListener('click',undoDrawing);
+window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!e.target.closest('input,textarea,[contenteditable="true"]')){e.preventDefault();e.stopPropagation();undoDrawing();}},true);
+window.addEventListener('resize',resizeDrawingCanvas);resizeDrawingCanvas();
+try{const saved=localStorage.getItem(drawingStorageKey);if(saved){const img=new Image();img.onload=()=>drawingCtx.drawImage(img,0,0,drawingCanvas.clientWidth,drawingCanvas.clientHeight);img.src=saved;}}catch(e){}
+// Restore favorite flags and make the remove/star controls available on selected rows.
+catalogRows.forEach(tr => {
+  const name = gpuName(tr);
+  tr.dataset.favorite = favoriteNames.has(name) ? 'true' : 'false';
+  renderRemoveCell(tr);
+});
+// Modal helpers: these are front-end placeholders until an account/contact backend is connected.
+const modalBackdrop = document.getElementById('modalBackdrop'), modalTitle = document.getElementById('modalTitle'), modalBody = document.getElementById('modalBody'), modalSubmit = document.getElementById('modalSubmit');
+let modalAction = null;
+function openModal(title, body, actionLabel='Продолжить', action=null) {
+  modalTitle.textContent = title; modalBody.innerHTML = body; modalSubmit.textContent = actionLabel; modalAction = action;
+  document.querySelector('.site-modal').classList.remove('rate-modal');
+  document.getElementById('modalCancel').textContent = 'Закрыть';
+  modalBackdrop.classList.add('open');
+}
+function closeModal(){modalBackdrop.classList.remove('open');modalAction=null;document.querySelector('.site-modal').classList.remove('rate-modal');document.getElementById('modalCancel').textContent='Закрыть';}
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalCancel').addEventListener('click', closeModal);
+let modalPointerStartedOutside=false;
+modalBackdrop.addEventListener('pointerdown', e => { modalPointerStartedOutside = e.target===modalBackdrop; });
+modalBackdrop.addEventListener('click', e => { if(e.target===modalBackdrop && modalPointerStartedOutside) closeModal(); modalPointerStartedOutside=false; });
+modalSubmit.addEventListener('click', () => { if(modalAction) modalAction(); else closeModal(); });
+document.getElementById('loginButton').addEventListener('click', () => openModal('Вход и регистрация', '<p>В демонстрационной версии аккаунты ещё не подключены. После подключения регистрации избранные видеокарты будут синхронизироваться между устройствами.</p><input type="email" placeholder="Электронная почта" aria-label="Электронная почта"><input type="password" placeholder="Пароль" aria-label="Пароль">', 'Понятно'));
+const pageInfo = {
+  processors:['Сравнение процессоров','<p>Находится в разработке</p>'],
+  error:['Нашли ошибку?','<p>Сообщите модель видеокарты, характеристику с ошибкой и правильное значение (если оно известно).</p><textarea id="modalMessage" rows="4" placeholder="Опишите ошибку"></textarea>'],
+  contact:['Напишите нам','<input id="contactEmail" type="email" placeholder="Ваш email (необязательно)"><textarea id="modalMessage" rows="4" placeholder="Ваше сообщение"></textarea>'],
+  faq:['Часто задаваемые вопросы о видеокартах','<article class="faq-page"><p class="faq-intro">Ответы на популярные вопросы о сравнении видеокарт NVIDIA GeForce, AMD Radeon и Intel Arc, игровых FPS, видеопамяти и выборе GPU для компьютера.</p><h2>Как сравнить видеокарты между собой?</h2><p>Выберите две или несколько моделей в разделе сравнения видеокарт. Сопоставляйте поколение графического процессора, частоты, количество вычислительных блоков, тип и объём видеопамяти, пропускную способность, энергопотребление и требования к блоку питания. Одной характеристики недостаточно, чтобы определить победителя во всех задачах.</p><h2>Какая видеокарта лучше для игр?</h2><p>Лучшая видеокарта зависит от бюджета, разрешения монитора, игр и желаемой частоты кадров. Для корректного выбора сравнивайте независимые игровые тесты в одинаковом разрешении и на одинаковых настройках. Самая дорогая модель нужна не каждому.</p><h2>Как узнать, сколько FPS будет в игре?</h2><p>FPS зависит не только от видеокарты, но и от процессора, оперативной памяти, разрешения, графических настроек, драйверов и конкретной игры. Ищите тесты именно в тех играх и условиях, в которых планируете играть. Результат одной игры нельзя автоматически переносить на все остальные.</p><h2>Что важнее: объём видеопамяти или мощность видеокарты?</h2><p>Важны оба параметра. Объём VRAM влияет на возможность использовать текстуры высокого качества и работать с большими сценами, но сам по себе не гарантирует высокий FPS. Сравнивайте видеопамять вместе с реальными тестами производительности и пропускной способностью.</p><h2>Что означают NVIDIA Blackwell, AMD RDNA и Intel Xe?</h2><p>Это названия архитектур графических процессоров. Архитектура определяет устройство GPU и поддерживаемые возможности. При сравнении старых и новых моделей учитывайте не только поколение, но и результаты тестов, объём памяти и поддержку нужных технологий.</p><h2>Что лучше — NVIDIA GeForce или AMD Radeon?</h2><p>Универсального ответа нет. Сравните производительность в ваших играх, трассировку лучей, технологии масштабирования изображения, кодирование видео, поддержку программ и энергопотребление. Для рабочих задач совместимость с конкретным приложением может быть важнее игрового рейтинга.</p><h2>Подойдёт ли видеокарта к моему компьютеру?</h2><p>Перед покупкой проверьте длину и толщину карты, свободное место в корпусе, мощность и разъёмы блока питания, слот PCI Express и возможности охлаждения. Также убедитесь, что процессор не будет существенно ограничивать производительность в ваших играх.</p><h2>Какой блок питания нужен для видеокарты?</h2><p>Ориентируйтесь на рекомендации производителя конкретной модели, разъёмы питания и энергопотребление всей системы. Учитывайте качество блока питания и запас мощности; не выбирайте его только по максимальной цифре на наклейке.</p><h2>Как сравнивать видеокарты для 1080p, 1440p и 4K?</h2><p>Чем выше разрешение, тем больше нагрузка на GPU и видеопамять. Сравнивайте FPS отдельно для Full HD (1080p), 1440p и 4K: производительность и относительный разрыв между моделями могут отличаться в зависимости от разрешения и игры.</p><h2>Можно ли сравнивать мобильную видеокарту ноутбука с настольной?</h2><p>Нужно учитывать конкретную модель, лимит мощности, охлаждение и настройки ноутбука. Названия с одинаковым номером не всегда означают одинаковую производительность в мобильной и настольной версиях. Лучше опираться на тесты конкретного устройства.</p><h2>Что такое частота ядра, шина памяти и TDP?</h2><p>Частота ядра показывает рабочую частоту GPU; шина памяти влияет на обмен данными с видеопамятью; TDP/TGP помогает оценить тепловые и энергетические требования, но определения различаются у производителей. Ни один из этих показателей отдельно не является точным рейтингом производительности.</p><h2>Можно ли доверять одному рейтингу видеокарт?</h2><p>Любой общий рейтинг упрощает картину: порядок моделей меняется в зависимости от игры, разрешения и технологий. Для выбора используйте несколько независимых тестов и проверяйте условия измерений. Если данные на сайте обозначены как ориентировочные, не воспринимайте их как гарантированный FPS.</p><h2>Как сообщить об ошибке в характеристиках?</h2><p>Откройте пункт «Нашли ошибку?» и укажите модель видеокарты, характеристику и ссылку на источник, если он есть. Это поможет проверить информацию и исправить возможную неточность.</p></article>']
+};
+// Форма пользовательской оценки: все три значения можно вводить вручную.
+const popularGames = [
+ 'Counter-Strike 2','Dota 2','Cyberpunk 2077','Grand Theft Auto V','Grand Theft Auto VI',
+ 'Fortnite','PUBG: Battlegrounds','Call of Duty: Warzone','Apex Legends','Minecraft',
+ 'Hogwarts Legacy','Red Dead Redemption 2','The Witcher 3: Wild Hunt','Baldur’s Gate 3',
+ 'Helldivers 2','Forza Horizon 5','Alan Wake 2','Escape from Tarkov','World of Tanks',
+ 'Valorant','Overwatch 2','Starfield','S.T.A.L.K.E.R. 2: Heart of Chornobyl','Black Myth: Wukong',
+ 'League of Legends','A Plague Tale: Requiem','Assassin’s Creed Shadows','Assassin’s Creed Valhalla',
+ 'Battlefield 2042','Battlefield 6','Call of Duty: Black Ops 6','Diablo IV','Elden Ring',
+ 'F1 25','Farming Simulator 25','Final Fantasy XVI','God of War Ragnarök','Horizon Forbidden West',
+ 'Kingdom Come: Deliverance II','Marvel Rivals','Microsoft Flight Simulator 2024','Monster Hunter Wilds',
+ 'Path of Exile 2','Resident Evil 4','Silent Hill 2','The Last of Us Part I','The Last of Us Part II',
+ 'The Sims 4','War Thunder','Warframe','World of Warcraft'
+];
+const gameAliases = {
+ 'Counter-Strike 2':['кс2','кс 2','кс','контр страйк 2','контрстрайк 2','контр страйк','контрстрайк','контра','counter strike','cs2','ксго','cs go','ксерка'],
+ 'Dota 2':['дота 2','дота','дота2'],
+ 'Cyberpunk 2077':['киберпанк','кибер панк','киберпанк 2077','cyberpunk'],
+ 'Grand Theft Auto V':['гта 5','гта5','гта в','гта 5','gta 5','gta v','гта','гта 5 рп','гта онлайн'],
+ 'Grand Theft Auto VI':['гта 6','гта6','gta 6','gta vi'],
+ 'Fortnite':['фортнайт','фортнайт','форт'],
+ 'PUBG: Battlegrounds':['пубг','пабг','пабджи','пабг батлграундс','pubg'],
+ 'Call of Duty: Warzone':['кол оф дьюти','колда','варзон','warzone','кал оф дьюти','кол оф дьюти варзон'],
+ 'Apex Legends':['апекс','апекс легендс','апекс легенды'],
+ 'Minecraft':['майнкрафт','минекрафт','майн','minecraft'],
+ 'Hogwarts Legacy':['хогвартс','хогвартс легаси','хогвартс наследие'],
+ 'Red Dead Redemption 2':['ред дед редемпшен 2','ред дед 2','рдр 2','рдр2','rdr2','ред дед'],
+ 'The Witcher 3: Wild Hunt':['ведьмак','ведьмак 3','ведьмак 3 дикая охота','ведьмак дикая охота'],
+ 'Baldur’s Gate 3':['балдурс гейт 3','балдурс гейт','балдур','бг3'],
+ 'Helldivers 2':['хеллдайверс 2','хеллдайверс','хелл дайверс'],
+ 'Forza Horizon 5':['форза хорайзон 5','форза горизонт 5','форза 5','форза'],
+ 'Alan Wake 2':['алан вейк 2','алан вейк'],
+ 'Escape from Tarkov':['тарков','эскейп фром тарков','побег из таркова'],
+ 'World of Tanks':['мир танков','ворлд оф танкс','вот','wot','танки'],
+ 'Valorant':['валорант','валик'],
+ 'Overwatch 2':['оверwatch 2','оверватч 2','оверватч','овервотч'],
+ 'Starfield':['старфилд'],
+ 'S.T.A.L.K.E.R. 2: Heart of Chornobyl':['сталкер 2','сталкер','сталкер сердце чернобыля','stalker 2'],
+ 'Black Myth: Wukong':['блэк миф вуконг','блэк миф','black myth','вуконг'],
+ 'League of Legends':['лига легенд','лол','league of legends'],
+ 'A Plague Tale: Requiem':['плаг тейл','плейг тейл','чума реквием'],
+ 'Assassin’s Creed Shadows':['ассасин крид шэдоус','ассасин шэдоус','ассасинс крид'],
+ 'Assassin’s Creed Valhalla':['ассасин крид вальгалла','вальгалла'],
+ 'Battlefield 2042':['батлфилд 2042','батла 2042','батлфилд'],
+ 'Battlefield 6':['батлфилд 6','батла 6'],
+ 'Call of Duty: Black Ops 6':['блэк опс 6','блэк опс','black ops 6','колда блэк опс'],
+ 'Diablo IV':['диабло 4','диабло iv','диабло'],
+ 'Elden Ring':['элден ринг','елден ринг','elden ring'],
+ 'F1 25':['ф1 25','формула 1 25','f1 25'],
+ 'Farming Simulator 25':['фарминг симулятор 25','симулятор фермера','фермер симулятор'],
+ 'Final Fantasy XVI':['финал фэнтези 16','финал фэнтези xvi','final fantasy 16'],
+ 'God of War Ragnarök':['год оф вар рагнарёк','год оф вар рагнарек','бог войны рагнарёк','год оф вар'],
+ 'Horizon Forbidden West':['хорайзон форбидден вест','хорайзон запретный запад','horizon forbidden west'],
+ 'Kingdom Come: Deliverance II':['кингдом кам 2','кингдом кам деливеранс 2','kingdom come 2'],
+ 'Marvel Rivals':['марвел райвалс','марвел ривалс','ривалс'],
+ 'Microsoft Flight Simulator 2024':['симулятор полётов','симулятор полетов','флайт симулятор','microsoft flight simulator'],
+ 'Monster Hunter Wilds':['монстер хантер вайлдс','монстер хантер','monster hunter'],
+ 'Path of Exile 2':['путь изгнанника 2','пое 2','поэ 2','path of exile 2'],
+ 'Resident Evil 4':['резидент ивил 4','обитель зла 4','резидент эвил 4'],
+ 'Silent Hill 2':['сайлент хилл 2','сайлент хилл'],
+ 'The Last of Us Part I':['одни из нас','ласт оф ас','the last of us','последние из нас'],
+ 'The Last of Us Part II':['одни из нас 2','ласт оф ас 2','последние из нас 2'],
+ 'The Sims 4':['симс 4','симс','sims 4'],
+ 'War Thunder':['вар тандер','вар тандер','war thunder'],
+ 'Warframe':['варфрейм','warframe'],
+ 'World of Warcraft':['ворлд оф варкрафт','варкрафт','вов','wow']
+};
+function gameMatches(query){
+  const q=query.trim().toLocaleLowerCase('ru'); if(!q)return [];
+  return popularGames.filter(g=>g.toLocaleLowerCase('ru').includes(q)||(gameAliases[g]||[]).some(a=>{a=a.toLocaleLowerCase('ru');return a.includes(q)||(a.length>3&&q.includes(a));})).slice(0,8);
+}
+function showGameSuggestions(input,showAll){
+  const wrap=input.closest('.rate-game-wrap'), box=wrap.querySelector('.rate-suggestions'), toggle=wrap.querySelector('.rate-game-toggle');
+  const list=showAll?popularGames:gameMatches(input.value);
+  if(!list.length||(!showAll&&!input.value.trim())){box.hidden=true;toggle.setAttribute('aria-expanded','false');return;}
+  box.innerHTML=list.map(g=>'<button type="button" class="rate-suggestion" data-game="'+escapeRateHtml(g)+'">'+escapeRateHtml(g)+'</button>').join('');
+  box.hidden=false;toggle.setAttribute('aria-expanded','true');
+}
+function hideRateSuggestions(){document.querySelectorAll('.rate-suggestions').forEach(b=>{b.hidden=true;b.parentElement.querySelector('.rate-game-toggle').setAttribute('aria-expanded','false');});}
+document.addEventListener('click',e=>{if(!e.target.closest('.rate-game-wrap'))hideRateSuggestions();});
+const fpsOptions=Array.from({length:60},(_,i)=>String((i+1)*5)).concat(['350','400','450','500','600']);
+const gpuRateOptions=()=>catalogRows.map(tr=>gpuName(tr));
+function escapeRateHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+let rateSeq=0;
+function rateSeg(key,label,items,def){
+  return '<div class="rate-seg-wrap"><span class="rate-label">'+label+'</span><div class="rate-seg" data-setting="'+key+'">'+items.map(v=>'<button type="button" class="rate-choice'+(v===def?' active':'')+'" data-value="'+v+'">'+v+'</button>').join('')+'</div></div>';
+}
+function rateRowHtml(){
+  const n=++rateSeq, opt=a=>a.map(v=>'<option value="'+escapeRateHtml(v)+'"></option>').join('');
+  return '<div class="rate-row"><div class="rate-grid">'
+   +'<label class="rate-field"><span class="rate-label">Видеокарта</span><input class="rate-gpu" type="text" list="rg'+n+'" placeholder="Например, GeForce RTX 5090" autocomplete="off"><datalist id="rg'+n+'">'+opt(gpuRateOptions())+'</datalist></label>'
+   +'<div class="rate-field"><span class="rate-label">Игра</span><div class="rate-game-wrap"><input class="rate-game" type="text" placeholder="Введите или выберите игру" autocomplete="off" aria-label="Игра"><button class="rate-game-toggle" type="button" aria-label="Список игр" aria-expanded="false">▾</button><div class="rate-suggestions" hidden></div></div></div>'
+   +'<label class="rate-field"><span class="rate-label">Средний FPS</span><input class="rate-fps" type="number" inputmode="numeric" min="1" max="1000" list="rf'+n+'" placeholder="FPS"><datalist id="rf'+n+'">'+opt(fpsOptions)+'</datalist></label></div>'
+   +'<div class="rate-settings">'+rateSeg('resolution','Разрешение',['Full HD','2K','4K'],'Full HD')+rateSeg('quality','Графика',['Низкие','Средние','Ультра'],'Средние')
+   +'<button class="remove-rate-row" type="button">Удалить результат</button></div></div>';
+}
+function maybeAppendRateRow(){
+  const c=document.getElementById('rateRows'); if(!c)return;
+  const last=c.lastElementChild;
+  if(last&&last.querySelector('.rate-game').value.trim()&&+last.querySelector('.rate-fps').value>0)c.insertAdjacentHTML('beforeend',rateRowHtml());
+}
+function openRateModal(){
+  openModal('Моя видеокарта','<p class="rate-sub">Укажите видеокарту, игру, средний FPS и настройки теста. Игру можно вводить по-русски — подскажем английское название.</p><div id="rateRows">'+rateRowHtml()+'</div><p class="rate-hint">Новая строка добавится сама, когда заполнены игра и FPS.</p>','Отправить результаты',submitRateForm);
+  document.querySelector('.site-modal').classList.add('rate-modal');
+  document.getElementById('modalCancel').textContent='Отмена';
+  const rows=document.getElementById('rateRows');
+  rows.addEventListener('input',e=>{if(e.target.matches('.rate-game'))showGameSuggestions(e.target);maybeAppendRateRow();});
+  rows.addEventListener('change',maybeAppendRateRow);
+  rows.addEventListener('click',e=>{
+    const t=e.target, wrap=t.closest('.rate-game-wrap');
+    if(t.closest('.rate-game-toggle')){const box=wrap.querySelector('.rate-suggestions');if(box.hidden){showGameSuggestions(wrap.querySelector('.rate-game'),true);box.scrollTop=0;}else hideRateSuggestions();return;}
+    const sug=t.closest('.rate-suggestion');
+    if(sug){wrap.querySelector('.rate-game').value=sug.dataset.game;hideRateSuggestions();maybeAppendRateRow();return;}
+    const ch=t.closest('.rate-choice');
+    if(ch){ch.parentElement.querySelectorAll('.rate-choice').forEach(b=>b.classList.toggle('active',b===ch));return;}
+    const rm=t.closest('.remove-rate-row');if(rm)rm.closest('.rate-row').remove();
+  });
+}
+function submitRateForm(){
+  const rows=[...document.querySelectorAll('#rateRows .rate-row')];
+  const results=rows.map(row=>({gpu:row.querySelector('.rate-gpu').value.trim(),game:row.querySelector('.rate-game').value.trim(),fps:row.querySelector('.rate-fps').value,resolution:row.querySelector('[data-setting="resolution"] .rate-choice.active')?.dataset.value||'Full HD',quality:row.querySelector('[data-setting="quality"] .rate-choice.active')?.dataset.value||'Средние'})).filter(x=>x.game||x.fps||x.gpu);
+  if(!results.length || results.some(x=>!x.gpu||!x.game||!x.fps||Number(x.fps)<=0)){
+    openModal('Заполните результаты','<p>В каждой заполненной строке укажите видеокарту, игру и положительное значение FPS. Названия видеокарты и игры разрешено вводить вручную. Пустую последнюю строку можно оставить без заполнения.</p>','Вернуться к форме',()=>{closeModal();openRateModal();});return;
+  }
+  const summary=results.map(x=>`<div style="padding:9px 0;border-bottom:1px solid #203b58"><b>${escapeRateHtml(x.gpu)}</b> — ${escapeRateHtml(x.game)}: <b>${escapeRateHtml(x.fps)} FPS</b><br><small style="color:#91aec7">${escapeRateHtml(x.resolution)} · графика: ${escapeRateHtml(x.quality)}</small></div>`).join('');
+  openModal('Результаты подготовлены',`<p>Спасибо! Вы указали:</p>${summary}<p>Отправка на сайт пока не подключена. Когда появится серверная часть, эти данные можно будет передавать на проверку и использовать для объективного рейтинга.</p>`,'Понятно');
+}
+
+document.getElementById('clearDrawing').addEventListener('click',()=>{const editor=drawingPaper.querySelector('.drawing-text-editor');if(editor)finishInlineText(editor,false);saveDrawingSnapshot();drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height);});
+document.getElementById('saveDrawing').addEventListener('click',()=>{try{localStorage.setItem(drawingStorageKey,drawingCanvas.toDataURL('image/png'));openModal('Заметка сохранена','<p>Заметка сохранена в этом браузере на этом устройстве. Вы сможете открыть её при следующем посещении сайта.</p>','Понятно');}catch(e){openModal('Не удалось сохранить заметку','<p>В браузере недостаточно места для сохранения. Попробуйте скачать рисунок через «Поделиться».</p>','Закрыть');}});
+async function exportDrawingFile(){const blob=await new Promise(resolve=>drawingCanvas.toBlob(resolve,'image/png'));if(!blob){openModal('Не удалось подготовить рисунок','<p>Попробуйте ещё раз.</p>','Закрыть');return null;}return new File([blob],'gpu-compare-zametka.png',{type:'image/png'});}
+document.getElementById('sendDrawing').addEventListener('click',()=>{
+  openModal('Поделиться заметкой','<p>Выберите, что сделать с рисунком.</p><div class="drawing-share-actions"><button type="button" class="btn primary" id="drawingShareOthers">Поделиться</button><button type="button" class="btn" id="drawingSendUs">Отправить нам</button></div>','Закрыть');
+  document.getElementById('drawingSendUs').addEventListener('click',async()=>{const file=await exportDrawingFile();if(!file)return;const blob=new Blob([await file.arrayBuffer()],{type:'image/png'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);closeModal();openModal('Рисунок подготовлен к отправке','<p>Файл заметки скачан. Прикрепите его к письму или сообщению нам. Автоматическая отправка будет доступна после подключения адреса обратной связи.</p>','Понятно');});
+  document.getElementById('drawingShareOthers').addEventListener('click',async()=>{const file=await exportDrawingFile();if(!file)return;try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Заметка GPU Compare',text:'Моя заметка'});closeModal();return;}}catch(e){if(e.name==='AbortError')return;}const url=URL.createObjectURL(new Blob([await file.arrayBuffer()],{type:'image/png'}));const a=document.createElement('a');a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);closeModal();openModal('Заметка сохранена','<p>Браузер не поддерживает прямую отправку файла — скачайте изображение и прикрепите его к нужному приложению.</p>','Понятно');});
+});
+document.querySelectorAll('.sidebar .navitem').forEach(item => item.addEventListener('click', () => {
+  document.querySelectorAll('.sidebar .navitem').forEach(n => n.classList.remove('active')); item.classList.add('active');
+  const page = item.dataset.page; if(page==='compare'){closeModal();return;} if(page==='rate'){openRateModal();return;} if(pageInfo[page]) { openModal(pageInfo[page][0], pageInfo[page][1], 'Понятно'); if(page==='faq') document.querySelector('.site-modal')?.classList.add('faq-reading'); }
+}));
+document.getElementById('shareComparison').addEventListener('click', async () => {
+  const selected = [...table.tBodies[0].rows].filter(tr => tr.dataset.selected==='true').map(tr => gpuName(tr));
+  const url = new URL(window.location.href); url.searchParams.set('gpus', selected.join('|'));
+  const shareUrl = url.href;
+  try { await navigator.clipboard.writeText(shareUrl); openModal('Ссылка скопирована','<p>Ссылка содержит выбранные видеокарты. После размещения сайта на домене ею можно будет поделиться с другими пользователями.</p><input readonly value="'+shareUrl.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">','Готово'); }
+  catch(e) { openModal('Ссылка на сравнение','<p>Скопируйте ссылку ниже.</p><input id="shareUrlInput" readonly value="'+shareUrl.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">','Выделить ссылку',()=>{const f=document.getElementById('shareUrlInput');f.select();document.execCommand('copy');closeModal();}); }
+});
+document.getElementById('siteFeedback').addEventListener('click', () => openModal('Отзыв о сайте','<p>Что понравилось или что стоит улучшить?</p><textarea id="feedbackText" rows="4" placeholder="Напишите отзыв"></textarea><input id="feedbackEmail" type="email" placeholder="Email для ответа (необязательно)">','Подготовить письмо',()=>{
+  const msg=document.getElementById('feedbackText')?.value||''; const email=document.getElementById('feedbackEmail')?.value||'';
+  window.location.href='mailto:?subject='+encodeURIComponent('Отзыв о GPU Compare')+'&body='+encodeURIComponent(msg+(email?'\n\nEmail для ответа: '+email:'')); closeModal();
+}));
+// Restore selected cards from a shared URL.
+try { const shared = new URL(window.location.href).searchParams.get('gpus'); if(shared) { shared.split('|').forEach(n => { const tr=catalogRows.find(t => gpuName(t)===n); if(tr) addGpu(tr); }); } } catch(e) {}
+
+
+/* ===== v7: поля в одну строку, перетаскивание строк, шкалы производительности ===== */
+var perfReady=false;
+const reduceMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+// 1. Подпись поля подбирается под его ширину — все поля помещаются в одну строку.
+const PH={'filter-all':['Все видеокарты','Все'],'filter-nvidia':['NVIDIA — выбрать модель','NVIDIA — модель','NVIDIA'],'filter-amd':['AMD — выбрать модель','AMD — модель','AMD'],'filter-intel':['INTEL — выбрать модель','INTEL — модель','INTEL'],'filter-retro':['Ретро карты до 2015г','Ретро до 2015г','Ретро'],'filter-favorites':['★ Избранные','★ Избр.','★']};
+const phCtx=document.createElement('canvas').getContext('2d');
+function fitPlaceholders(){
+  for(const [id,list] of Object.entries(PH)){
+    const inp=document.getElementById(id), cs=getComputedStyle(inp);
+    phCtx.font='800 '+cs.fontSize+' '+cs.fontFamily;
+    const room=inp.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-4;
+    inp.placeholder=list.find(t=>phCtx.measureText(t).width<=room)||list[list.length-1];
+  }
+}
+new ResizeObserver(fitPlaceholders).observe(document.querySelector('.filters'));
+if(document.fonts)document.fonts.ready.then(fitPlaceholders);
+
+// 2. Шкалы производительности.
+// Демо-индекс: средний относительный FPS в играх (RTX 5090 = 100), значения ПРИБЛИЗИТЕЛЬНЫЕ.
+// С базой данных достаточно выводить <tr data-perf="..."> — таблица GPU_PERF тогда не нужна.
+const GPU_PERF={}; // производительность берётся из базы: <tr data-perf="Passmark G3D Mark">
+const perfList=document.getElementById('perfList'), perfEmpty=document.getElementById('perfEmpty'), perfPanel=document.getElementById('perfPanel'), perfEls=new Map();
+const fmtPct=v=>(v>=10?Math.round(v):v.toFixed(1).replace('.',','))+'%';
+catalogRows.forEach(tr=>{
+  tr.dataset.perf=tr.dataset.perf||GPU_PERF[gpuName(tr)]||0;
+  const cell=tr.cells[1];
+  cell.insertAdjacentHTML('beforeend','<div class="mini-perf"><span class="mini-track"><i class="mini-fill"></i></span><b>0%</b></div>');
+  cell.querySelector('.gpu-name').insertAdjacentHTML('afterbegin','<span class="row-grip" title="Потяните, чтобы изменить порядок" aria-hidden="true"></span>');
+});
+// Шкала плавно вырастает/уменьшается (CSS transition), число меняется синхронно с ней.
+function setBar(fill,label,pct,instant){
+  cancelAnimationFrame(label._r);
+  const from=instant?0:(+label.dataset.v||0);
+  label.dataset.v=pct; fill.style.width=pct+'%';
+  if(instant||reduceMotion){label.textContent=fmtPct(pct);return;}
+  const t0=performance.now();
+  const step=t=>{const k=Math.min(1,(t-t0)/800), e=1-Math.pow(1-k,3);label.textContent=fmtPct(from+(pct-from)*e);if(k<1)label._r=requestAnimationFrame(step);};
+  label._r=requestAnimationFrame(step);
+}
+function renderPerf(){
+  const sel=catalogRows.filter(tr=>tr.dataset.selected==='true').sort((a,b)=>b.dataset.perf-a.dataset.perf);
+  const max=sel.length?+sel[0].dataset.perf:0, keep=new Set(sel.map(gpuName));
+  perfEmpty.hidden=sel.length>0;
+  const first=new Map([...perfEls].map(([k,el])=>[k,el.offsetTop]));
+  for(const [k,el] of perfEls) if(!keep.has(k)){el.style.top=el.offsetTop+'px';el.classList.add('leaving');perfEls.delete(k);setTimeout(()=>el.remove(),300);}
+  sel.forEach((tr,i)=>{
+    const k=gpuName(tr); let el=perfEls.get(k);
+    if(!el){
+      el=document.createElement('div');el.className='perf-row entering';el.dataset.brand=tr.dataset.brand;
+      el.innerHTML='<span class="perf-rank"></span><span class="perf-name"></span><span class="perf-track"><i class="perf-fill"></i></span><b class="perf-val">0%</b>';
+      el.querySelector('.perf-name').textContent=k;perfEls.set(k,el);
+    }
+    perfList.appendChild(el);el.querySelector('.perf-rank').textContent=i+1;
+  });
+  catalogRows.forEach(tr=>{if(tr.dataset.selected!=='true')setBar(tr.querySelector('.mini-fill'),tr.querySelector('.mini-perf b'),0,true);});
+  // FLIP: строки плавно «перетекают» на новые места
+  if(!reduceMotion)for(const [k,el] of perfEls){const dy=first.has(k)?first.get(k)-el.offsetTop:0;if(dy){el.style.transition='none';el.style.transform='translateY('+dy+'px)';}}
+  void perfList.offsetHeight;
+  for(const el of perfEls.values()){el.style.transition='';el.style.transform='';el.classList.remove('entering');}
+  sel.forEach(tr=>{
+    const pct=max?tr.dataset.perf/max*100:0, el=perfEls.get(gpuName(tr));
+    setBar(el.querySelector('.perf-fill'),el.querySelector('.perf-val'),pct);
+    setBar(tr.querySelector('.mini-fill'),tr.querySelector('.mini-perf b'),pct);
+  });
+}
+
+
+// 3. Перетаскивание строк мышью (за название; на сенсорных экранах — за значок ).
+(function(){
+  const tbody=table.tBodies[0];
+  let d=null, raf=0;
+  const rowsNow=()=>[...tbody.rows].filter(r=>r.dataset.selected==='true');
+  const tTop=()=>table.getBoundingClientRect().top;
+  const shift=(r,y,anim)=>{for(const c of r.cells){c.style.transition=anim?'transform .25s cubic-bezier(.22,.8,.3,1)':'none';c.style.transform=y?'translateY('+y+'px)':'';}};
+  function place(){
+    if(!d||!d.on)return;
+    const rows=rowsNow(), others=rows.filter(r=>r!==d.tr);
+    const want=d.cy-tTop()-d.off, mid=want+d.tr.offsetHeight/2;
+    const target=others.filter(r=>mid>r.offsetTop+r.offsetHeight/2).length;
+    if(target!==rows.indexOf(d.tr)){
+      const was=new Map(others.map(r=>[r,r.offsetTop]));
+      if(target>=others.length)tbody.appendChild(d.tr);else tbody.insertBefore(d.tr,others[target]);
+      others.forEach(r=>{const dy=was.get(r)-r.offsetTop;if(dy)shift(r,dy,false);});
+      void tbody.offsetHeight;
+      others.forEach(r=>{if(r.cells[0].style.transform)shift(r,0,true);});
+    }
+    shift(d.tr,want-d.tr.offsetTop,false);
+  }
+  function loop(){
+    if(!d||!d.on)return;
+    const vr=viewport.getBoundingClientRect(), top=vr.top+(table.tHead?table.tHead.offsetHeight:0);
+    const sp=d.cy<top+24?-8:d.cy>vr.bottom-36?8:0;
+    if(sp){viewport.scrollTop+=sp;place();}
+    raf=requestAnimationFrame(loop);
+  }
+  tbody.addEventListener('pointerdown',e=>{
+    const cell=e.target.closest('td:nth-child(2)');
+    if(!cell||e.button!==0||(e.pointerType!=='mouse'&&!e.target.closest('.row-grip')))return;
+    const tr=cell.parentElement;
+    d={tr,id:e.pointerId,y0:e.clientY,cy:e.clientY,off:e.clientY-tTop()-tr.offsetTop,on:false};
+    cell.setPointerCapture(e.pointerId);
+  });
+  tbody.addEventListener('pointermove',e=>{
+    if(!d||e.pointerId!==d.id)return;
+    d.cy=e.clientY;
+    if(!d.on){
+      if(Math.abs(d.cy-d.y0)<5)return;
+      d.on=true;window.rowDragging=true;
+      d.tr.classList.add('row-dragging');document.body.classList.add('is-row-dragging');loop();
+    }
+    place();
+  });
+  const end=e=>{
+    if(!d||e.pointerId!==d.id)return;
+    const w=d;d=null;cancelAnimationFrame(raf);
+    if(!w.on)return;
+    window.rowDragging=false;document.body.classList.remove('is-row-dragging');
+    shift(w.tr,0,true);
+    setTimeout(()=>{w.tr.classList.remove('row-dragging');for(const c of w.tr.cells)c.style.transition='';},280);
+  };
+  tbody.addEventListener('pointerup',end);
+  tbody.addEventListener('pointercancel',end);
+})();
+
+perfReady=true;renderPerf();
+
+/* ===== v17: меню-«шторка» на планшетах и телефонах ===== */
+(function(){
+  const root=document.documentElement, btn=document.getElementById('menuToggle');
+  const set=on=>{root.classList.toggle('menu-open',on);btn.setAttribute('aria-expanded',String(on));};
+  btn.addEventListener('click',()=>set(!root.classList.contains('menu-open')));
+  document.getElementById('drawerBackdrop').addEventListener('click',()=>set(false));
+  document.querySelector('.sidebar').addEventListener('click',e=>{if(e.target.closest('.navitem,#siteFeedback,.help-link'))set(false);});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')set(false);});
+  matchMedia('(min-width:1151px)').addEventListener('change',e=>{if(e.matches)set(false);});
+})();
+
+/* ===== v18: ориентация таблицы (видеокарты в строках / в столбцах) ===== */
+var tReady=false;
+const gridT=document.getElementById('gridT'), tPanel=document.querySelector('.table-panel'), orientBtn=document.getElementById('orientToggle'), ORIENT_KEY='gpuCompareOrientV1';
+function renderT(){
+  const rows=[...table.tBodies[0].rows].filter(r=>r.dataset.selected==='true');
+  const labels=[...table.tHead.rows[0].cells].slice(2), esc=escapeRateHtml;
+  const max=rows.reduce((m,r)=>Math.max(m,+r.dataset.perf||0),0);
+  let h='<div class="tg-row" role="row"><div class="tg-corner" role="columnheader"></div>';
+  if(!rows.length)h+='<div class="tg-head t-empty" role="columnheader">Выберите видеокарты в полях выше</div>';
+  rows.forEach(r=>{
+    const n=gpuName(r), pct=max?(+r.dataset.perf||0)/max*100:0, fav=r.dataset.favorite==='true', sub=r.cells[1].querySelector('small');
+    h+='<div class="tg-head" role="columnheader" data-name="'+esc(n)+'" data-brand="'+r.dataset.brand+'"><div class="t-acts"><span class="t-grip" title="Потяните, чтобы изменить порядок" aria-hidden="true"></span>'
+     +'<button type="button" class="t-btn fav'+(fav?' is-favorite':'')+'" data-act="fav" title="'+(fav?'Убрать из избранного':'Добавить в избранное')+'" aria-label="Избранное: '+esc(n)+'">'+(fav?'★':'☆')+'</button>'
+     +'<button type="button" class="t-btn rm" data-act="rm" title="Убрать из сравнения" aria-label="Убрать '+esc(n)+' из сравнения"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"/></svg></button></div>'
+     +'<span class="t-name">'+esc(n)+'</span><small>'+esc(sub?sub.textContent:'')+'</small>'
+     +'<div class="mini-perf"><span class="mini-track"><i class="mini-fill" style="width:'+pct+'%"></i></span><b>'+fmtPct(pct)+'</b></div></div>';
+  });
+  h+='</div>';
+  labels.forEach((th,i)=>{
+    h+='<div class="tg-row'+(i%2?' alt':'')+'" role="row"><div class="tg-label'+(th.classList.contains('nc')?' nc':'')+'" role="rowheader"'+(th.title?' title="'+esc(th.title)+'"':'')+'>'+th.innerHTML+'</div>';
+    if(!rows.length)h+='<div class="tg-cell" role="cell"></div>';
+    rows.forEach(r=>{h+='<div class="tg-cell" role="cell">'+r.cells[i+2].textContent.split(' / ').map(x=>esc(x).replace(/ /g,'\u00a0')).join(' / ')+'</div>';});
+    h+='</div>';
+  });
+  gridT.style.setProperty('--n',Math.max(rows.length,1));
+  gridT.innerHTML=h;
+}
+gridT.addEventListener('click',e=>{
+  const b=e.target.closest('button[data-act]'); if(!b)return;
+  const tr=catalogRows.find(t=>gpuName(t)===b.closest('.tg-head').dataset.name); if(!tr)return;
+  tr.querySelector(b.dataset.act==='rm'?'.remove-gpu':'.favorite-star').click();
+  if(b.dataset.act==='fav')renderT();
+});
+// Перетаскивание столбцов (за название мышью; на сенсорных экранах — за значок )
+(function(){
+  let d=null;
+  const heads=()=>[...gridT.firstElementChild.children];
+  gridT.addEventListener('pointerdown',e=>{
+    const h=e.target.closest('.tg-head[data-name]');
+    if(!h||e.button!==0||e.target.closest('button')||(e.pointerType!=='mouse'&&!e.target.closest('.t-grip')))return;
+    d={h,id:e.pointerId,x0:e.clientX,on:false}; h.setPointerCapture(e.pointerId);
+  });
+  gridT.addEventListener('pointermove',e=>{
+    if(!d||e.pointerId!==d.id)return;
+    if(!d.on){if(Math.abs(e.clientX-d.x0)<5)return;d.on=true;window.rowDragging=true;d.h.classList.add('col-dragging');}
+    const hs=heads(), from=hs.indexOf(d.h), vr=viewport.getBoundingClientRect(), lw=hs[0].getBoundingClientRect().width;
+    if(e.clientX<vr.left+lw+28)viewport.scrollLeft-=12;else if(e.clientX>vr.right-36)viewport.scrollLeft+=12;
+    let to=hs.length;
+    for(let i=1;i<hs.length;i++){const r=hs[i].getBoundingClientRect();if(e.clientX<r.left+r.width/2){to=i;break;}}
+    if(to===from||to===from+1)return;
+    for(const row of gridT.children)row.insertBefore(row.children[from],row.children[to]||null);
+    const tb=table.tBodies[0];
+    heads().slice(1).forEach(x=>{const tr=catalogRows.find(t=>gpuName(t)===x.dataset.name);if(tr)tb.appendChild(tr);});
+  });
+  const end=e=>{if(!d||e.pointerId!==d.id)return;d.h.classList.remove('col-dragging');window.rowDragging=false;d=null;};
+  gridT.addEventListener('pointerup',end);gridT.addEventListener('pointercancel',end);
+})();
+function setOrient(h,save){
+  tPanel.classList.toggle('orient-h',h);
+  orientBtn.setAttribute('aria-pressed',String(h));
+  orientBtn.title=h?'Вернуть таблицу: видеокарты в строках':'Повернуть таблицу: видеокарты в столбцах';
+  if(h)renderT();
+  viewport.scrollTo(0,0);
+  if(save)try{localStorage.setItem(ORIENT_KEY,h?'h':'v');}catch(e){}
+}
+orientBtn.addEventListener('click',()=>setOrient(!tPanel.classList.contains('orient-h'),true));
+try{if(localStorage.getItem(ORIENT_KEY)==='h')setOrient(true,false);}catch(e){}
+tReady=true;renderT();
+
+// Выбор темы: сохранённая настройка имеет приоритет; по умолчанию на мобильных — чёрно-белая.
+(function(){const picker=document.getElementById('themePicker'),key='gpuCompareThemeV1',themes={default:'',mono:'theme-mono',light:'theme-light',purple:'theme-purple',forest:'theme-forest'};let saved='';try{saved=localStorage.getItem(key)||'';}catch(e){}const initial=saved||((window.matchMedia&&window.matchMedia('(max-width: 760px)').matches)?'mono':'default');picker.value=themes[initial]!==undefined?initial:'default';function applyTheme(value){document.body.classList.remove(...Object.values(themes).filter(Boolean));if(themes[value])document.body.classList.add(themes[value]);picker.value=value;try{localStorage.setItem(key,value);}catch(e){}}applyTheme(initial);picker.addEventListener('change',()=>applyTheme(picker.value));})();
+
+/* ===== Уведомление о cookie (включается/выключается переключателем FEATURES.cookies) ===== */
+(function(){
+  var bar=document.getElementById('cookieBar'); if(!bar)return;
+  var KEY='umoCookieNoticeV1', ok=false;
+  try{ok=localStorage.getItem(KEY)==='1';}catch(e){}
+  if(!ok)bar.classList.add('show');
+  document.getElementById('cookieOk').addEventListener('click',function(){bar.classList.remove('show');try{localStorage.setItem(KEY,'1');}catch(e){}});
+  document.getElementById('cookieMore').addEventListener('click',function(){openModal('Как сайт использует cookie и память браузера','<p>Сейчас сайт хранит в вашем браузере только ваши настройки: тему оформления, избранные видеокарты, заметку на листе и ориентацию таблицы. Эти данные остаются на вашем устройстве и никуда не передаются.</p><p>Удалить их можно в настройках браузера (очистка данных сайта). Если на сайте появятся сервисы статистики или другие cookie, этот текст будет дополнен.</p>','Понятно');});
+})();
+</script>
 </body>
 </html>
