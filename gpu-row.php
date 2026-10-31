@@ -84,7 +84,8 @@ function brandClass($brand) {
  *  [0] td.remove-cell      — пусто (JS добавит кнопки «убрать/избранное»)
  *  [1] Видеокарта          — short_name + "brand · arch_name" + метка значка
  *  [2] Релиз               — release_date ("30.01.2025" -> "янв 2025")
- *  [3] Частота ядра        — base_clock / boost_clock
+ *  [3] Техпроцесс / ядро   — process_size / gpu_core
+ *  [4] Частота ядра        — base_clock / boost_clock
  *  [4] Шейдеры / ROP / TMU — cores / rop_blocks / tmu_blocks
  *  [5] GPixel/s / GTexel/s — pixel_rate / texture_rate
  *  [6] Тип памяти/объём/частота — memory_type / memory_mb / mem_freq_mhz
@@ -110,6 +111,11 @@ function renderGpuRow(array $g): string {
             $relTxt = monthRu((int)date('n', $ts)) . ' ' . $year;
         }
     }
+
+    // --- Техпроцесс / название ядра ---
+    $proc = trim((string)($g['process_size'] ?? ''));
+    $coreN = capTokens(trim((string)($g['gpu_core'] ?? '')));
+    $procCore = implode(' · ', array_filter([$proc ?: null, $coreN ?: null])) ?: '—';
 
     // --- Частота ядра: "2 017 / 2 407" или одна цифра ---
     $bc = fmtInt($g['base_clock'] ?? null);
@@ -213,7 +219,9 @@ function renderGpuRow(array $g): string {
     $dataAttrs = 'data-brand="' . e($brand) . '"'
         . ' data-year="' . ($year !== null ? (int)$year : '') . '"'
         . ' data-new="' . $isNew . '"'
-        . ' data-perf="' . $perf . '"';
+        . ' data-perf="' . $perf . '"'
+        . ' data-id="' . (isset($g['id']) ? (int)$g['id'] : 0) . '"'
+        . ' data-popularity="' . (isset($g['popularity']) ? (int)$g['popularity'] : 0) . '"';
 
     return '<tr data-catalog="1" ' . $dataAttrs . '>'
         . '<td class="remove-cell"></td>'
@@ -221,6 +229,7 @@ function renderGpuRow(array $g): string {
           . '<span><span class="brand-name ' . $cls . '">' . e($short) . '</span>'
           . '<small>' . e($subSmall) . '</small></span></div></td>'
         . '<td>' . e($relTxt ?? '—') . '</td>'
+        . '<td>' . e($procCore) . '</td>'
         . '<td>' . e($clocks ?? '—') . '</td>'
         . '<td>' . e($shaders) . '</td>'
         . '<td>' . e($rates) . '</td>'

@@ -27,6 +27,7 @@ try {
 if (!is_file($CSV)) die("Не найден файл: $CSV\n");
 
 // ---- Создание таблицы ----
+$pdo->exec('DROP TABLE IF EXISTS gpu_popularity'); // счётчик popularity чистим вместе с gpus
 $pdo->exec('DROP TABLE IF EXISTS gpus');
 $pdo->exec('CREATE TABLE gpus (
     id              INT AUTO_INCREMENT PRIMARY KEY,
@@ -62,6 +63,13 @@ $pdo->exec('CREATE TABLE gpus (
     INDEX (brand), INDEX (perf_score), INDEX (release_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
+// Счётчик популярности: сколько раз карту выбирали в сравнение (обновляет track.php).
+$pdo->exec('CREATE TABLE IF NOT EXISTS gpu_popularity (
+    gpu_id INT PRIMARY KEY,
+    hits   INT NOT NULL DEFAULT 0,
+    CONSTRAINT fk_gpu FOREIGN KEY (gpu_id) REFERENCES gpus(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+
 // ---- Чтение CSV ----
 // Функции преобразования «сырых» значений CSV в значения для базы.
 function num($s) {                     // "1 792" / "423,6" -> float, '' -> null
@@ -85,11 +93,29 @@ function bwToGBs($s) {                 // "1.79 TB/s" -> 1790 (ГБ/с), "Depend
 function watt($s) {                    // "575 W" / "unknown" -> 575 / null
     return num(preg_replace('/[^0-9.,]/', '', (string)$s));
 }
-function ramMB($ram, $type) {          // объём в МБ: <16 считаем гигабайтами (старые карты в MB уже > 16)
+function ramMB($ram, $type, $year = null) {          // объём в МБ. В CSV значения <=512 — это мегабайты
+    // (старые карты: 32/64/128/256/512), всё остальное — гигабайты (2, 4, 8, 24, 1024...).
     $v = num($ram);
     if ($v === null) return null;
     if (stripos((string)$type, 'shared') !== false) return 0; // системная память
-    return (int)round($v < 16 ? $v * 1024 : $v);
+    // В CSV столбец объёма памяти смешанный: старые карты записаны в МЕГАБАЙТАХ
+    // (32/64/128/256/512/768/896/1024/1280/1536), современные — в ГИГАБАЙТАХ
+    // (1..96). Правила:
+    //  * <=512 — всегда МБ;
+    //  * DDR/DDR2/SDR/RDRAM физически не бывали больше ~1.5 ГБ -> МБ;
+    //  * GDDR/GDDR2/GDDR3 — числа 700..1536 это МБ старых карт (GTX 285: 1024 МБ);
+    //  * GDDR5+ с числом 700..1536: до 2016 г. это мегабайты (GTX 750 — 1024 МБ),
+    //    позже таких записей в базе нет, но на всякий случай трактуем как ГБ.
+    $t = strtoupper(trim((string)$type));
+    if ($v <= 512) return (int)round($v);                              // МБ
+    if ($v >= 700 && $v <= 1536) {
+        $oldType = (bool)preg_match('/^(DDR|DDR2|DDR3|SDR|SGRAM|RDRAM|GDDR|GDDR2|GDDR3|GDDR4)\b/', $t);
+        if ($oldType) return (int)round($v);                           // МБ старых карт
+        if ($year === null || $year < 2016) return (int)round($v);     // GDDR5 2009-2015: МБ
+        return (int)round($v * 1024);                                  // маловероятно: ГБ
+    }
+    return (int)round($v * 1024);                                      // 1..96 и т.п.: ГБ -> МБ
+
 }
 function dxVer($s) {                   // "12,2" -> "12.2"
     $s = trim(str_replace(',', '.', (string)$s));
@@ -128,7 +154,7 @@ while (($c = fgetcsv($fp, 0, ';')) !== false) {
         num($c[9]),                                   // rt_cores
         num($c[10]),                                  // base_clock
         num($c[11]),                                  // boost_clock
-        ramMB($c[12], $c[13]),                        // ram (+ram_type) -> МБ
+        ramMB($c[12], $c[13], $year),                 // ram (+ram_type, год) -> МБ
         trim($c[13]),                                 // ram_type
         num($c[14]),                                  // bus_width
         trim($c[15]),                                 // bus_interface
