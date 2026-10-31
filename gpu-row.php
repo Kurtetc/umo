@@ -158,10 +158,9 @@ function renderGpuRow(array $g): string {
     $bd = $g['bandwidth'] ?? null;
     $bdTxt = null;
     if ($bd !== null && $bd !== '' && (float)$bd > 0) {
+        // как в дизайне: всегда ГБ/с с разделителем тысяч ("1 792 ГБ/с")
         $dec = fmod((float)$bd, 1) == 0 ? 0 : 1;
-        $bdTxt = ((float)$bd >= 1000)
-            ? rtrim(rtrim(number_format((float)$bd / 1000, 3, ',', ''), '0'), ',') . ' ТБ/с'
-            : number_format((float)$bd, $dec, ',', ' ') . ' ГБ/с';
+        $bdTxt = number_format((float)$bd, $dec, ',', ' ') . ' ГБ/с';
     }
     $busCell = (($bw ?? $bdTxt) !== null) ? ($bw !== null ? "$bw бит" : '—') . ' / ' . ($bdTxt ?? '—') : '—';
 
@@ -177,10 +176,12 @@ function renderGpuRow(array $g): string {
     // --- Тензорные / RT-ядра (у AMD — AI, у Intel — XMX) ---
     $tc = fmtInt($g['tensor_cores'] ?? null);
     $rc = fmtInt($g['rt_cores'] ?? null);
+    // как в дизайне: у NVIDIA просто "680 / 170", у AMD "128 AI / 64 RT", у Intel "160 XMX / 20 RT"
     $suffix = $brand === 'AMD' ? ' AI' : ($brand === 'INTEL' ? ' XMX' : '');
+    $rtSuffix = $brand === 'NVIDIA' ? '' : ' RT';
     if ($tc !== null || $rc !== null) {
-        $tensorCell = $tc !== null ? ($tc . $suffix . ' / ' . ($rc !== null ? $rc . ' RT' : '—'))
-                                  : ('— / ' . $rc . ' RT');
+        $tensorCell = $tc !== null ? ($tc . $suffix . ' / ' . ($rc !== null ? $rc . $rtSuffix : '—'))
+                                  : ('— / ' . $rc . $rtSuffix);
     } else $tensorCell = '—';
 
     // --- Вендор / название ядра ---
@@ -198,10 +199,10 @@ function renderGpuRow(array $g): string {
 
     // --- Архитектура в подписи имени: "RDNA 4.0" -> "RDNA 4", "Blackwell 2.0" -> "Blackwell" ---
     $arch = trim((string)($g['arch_name'] ?? ''));
-    $arch = preg_replace('/\s+\.?0+$/', '', $arch);          // срезание ".0"
-    $arch = preg_replace('/(\D)\.0$/', '$1', $arch);         // "Pascal 3.0"? на всякий
     if ($brand === 'NVIDIA') {                                // имена архитектур NVIDIA без версии
         $arch = preg_replace('/\s+\d[\d.]*$/', '', $arch);   // "Turing 2.0" -> "Turing", "Maxwell 1.0" -> "Maxwell"
+    } else {                                                  // AMD/Intel: убираем только хвост ".0"
+        $arch = preg_replace('/\.0$/', '', $arch);            // "RDNA 4.0" -> "RDNA 4", "GCN 5.1" без изменений
     }
     $subSmall = $brand === 'OTHER' ? $arch : trim("$brand · $arch", ' ·');
 
@@ -214,7 +215,7 @@ function renderGpuRow(array $g): string {
         . ' data-new="' . $isNew . '"'
         . ' data-perf="' . $perf . '"';
 
-    return '<tr ' . $dataAttrs . '>'
+    return '<tr data-catalog="1" ' . $dataAttrs . '>'
         . '<td class="remove-cell"></td>'
         . '<td><div class="gpu-name"><span class="gpu-mark ' . $cls . '-mark">' . e($mark) . '</span>'
           . '<span><span class="brand-name ' . $cls . '">' . e($short) . '</span>'
@@ -230,4 +231,11 @@ function renderGpuRow(array $g): string {
         . '<td>' . e($vendorCore) . '</td>'
         . '<td>' . e($ifaceCell) . '</td>'
         . '</tr>';
+}
+
+/** Все строки каталога сразу (скрыты через CSS по атрибуту data-catalog="1"). */
+function renderGpuRows(array $gpus): string {
+    $out = '';
+    foreach ($gpus as $g) $out .= renderGpuRow($g);
+    return $out;
 }
