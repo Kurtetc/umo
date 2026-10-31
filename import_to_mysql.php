@@ -93,30 +93,26 @@ function bwToGBs($s) {                 // "1.79 TB/s" -> 1790 (ГБ/с), "Depend
 function watt($s) {                    // "575 W" / "unknown" -> 575 / null
     return num(preg_replace('/[^0-9.,]/', '', (string)$s));
 }
-function ramMB($ram, $type, $year = null) {          // объём в МБ. В CSV значения <=512 — это мегабайты
-    // (старые карты: 32/64/128/256/512), всё остальное — гигабайты (2, 4, 8, 24, 1024...).
+function ramMB($ram, $type, $year = null) {
+    // Объём видеопамяти в МБ. В CSV столбец смешанный: у карт до ~2010 г. значения
+    // записаны в МЕГАБАЙТАХ (32/64/.../768/1024/1536), у более новых — в ГИГАБАЙТАХ
+    // (1..96). Числа, правдоподобные в обеих трактовках (например 512 или 1024),
+    // разрешаются по году выпуска и «красивости» объёма (кратно 64 МБ / 512 МБ).
     $v = num($ram);
     if ($v === null) return null;
-    if (stripos((string)$type, 'shared') !== false) return 0; // системная память
-    // В CSV столбец объёма памяти смешанный: старые карты записаны в МЕГАБАЙТАХ
-    // (32/64/128/256/512/768/896/1024/1280/1536), современные — в ГИГАБАЙТАХ
-    // (1..96). Правила:
-    //  * <=512 — всегда МБ;
-    //  * DDR/DDR2/SDR/RDRAM физически не бывали больше ~1.5 ГБ -> МБ;
-    //  * GDDR/GDDR2/GDDR3 — числа 700..1536 это МБ старых карт (GTX 285: 1024 МБ);
-    //  * GDDR5+ с числом 700..1536: до 2016 г. это мегабайты (GTX 750 — 1024 МБ),
-    //    позже таких записей в базе нет, но на всякий случай трактуем как ГБ.
-    $t = strtoupper(trim((string)$type));
-    if ($v <= 512) return (int)round($v);                              // МБ
-    if ($v >= 700 && $v <= 1536) {
-        $oldType = (bool)preg_match('/^(DDR|DDR2|DDR3|SDR|SGRAM|RDRAM|GDDR|GDDR2|GDDR3|GDDR4)\b/', $t);
-        if ($oldType) return (int)round($v);                           // МБ старых карт
-        if ($year === null || $year < 2016) return (int)round($v);     // GDDR5 2009-2015: МБ
-        return (int)round($v * 1024);                                  // маловероятно: ГБ
-    }
-    return (int)round($v * 1024);                                      // 1..96 и т.п.: ГБ -> МБ
-
+    if (stripos((string)$type, 'shared') !== false) return 0;               // системная память
+    $mb = ($v <= 512 || ($v >= 700 && $v <= 1536)) ? (int)round($v) : null; // трактовка «МБ»
+    $gb = null;                                                              // трактовка «ГБ» -> МБ
+    if ($v <= 96 || ($v >= 700 && $v <= 1536)) $gb = (int)round($v * 1024);
+    elseif ($v > 1536 && $v <= 98304)          $gb = (int)round($v);         // уже в МБ (напр. 6144)
+    $okMb = $mb !== null && fmod($mb, 64) < 0.01;                            // объёмы памяти кратны 64 МБ
+    $okGb = $gb !== null && $gb >= 512 && $gb <= 98304 && fmod($gb, 512) < 0.01; // ...и кратно 512 МБ
+    if ($okMb && !$okGb) return $mb;
+    if ($okGb && !$okMb) return $gb;
+    if ($year !== null && $year < 2011) return $mb ?? $gb;                   // легаси-карты — МБ
+    return $gb ?? $mb;                                                        // современные — Гигабайты
 }
+
 function dxVer($s) {                   // "12,2" -> "12.2"
     $s = trim(str_replace(',', '.', (string)$s));
     return $s === '' ? null : $s;

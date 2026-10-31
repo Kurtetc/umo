@@ -63,8 +63,25 @@ function gpuMark($brand, $full, $short) {
     if (preg_match('/^(RTX|GTX|GT|MX|NVS|QUADRO|TESLA|TITAN|CMP|ARC)/', $s, $m)) return $m[1];
     if ($brand === 'NVIDIA') return 'NV';
     if ($brand === 'AMD')    return 'AMD';
-    if ($brand === 'INTEL')  return 'INTEL';
+    if ($brand === 'INTEL')  return 'INT';
     return mb_substr($s, 0, 4);
+}
+
+/**
+ * Сокращение метки до 3 символов, чтобы она гарантированно влезала в квадратик.
+ * TITAN->TTN, TESLA->TSL, QUADRO->QDRO, VEGA->VGA, INTEL->INT и т.п.
+ */
+function shortenMark($mark) {
+    $mark = trim((string)$mark);
+    $len = function_exists('mb_strlen') ? mb_strlen($mark) : strlen($mark);
+    if ($len <= 3) return $mark;
+    $map = [
+        'TITAN' => 'TTN', 'TESLA' => 'TSL', 'QUADRO' => 'QDRO', 'VEGA' => 'VGA', 'MOBILE' => 'MBL',
+        'FIRESTREAM' => 'FS', 'INTEL' => 'INT',
+    ];
+    if (isset($map[$mark])) return $map[$mark];
+    if ($len === 4 && ctype_alpha($mark)) return substr($mark, 0, 3); // "8800" не тронем (есть цифры)
+    return function_exists('mb_substr') ? mb_substr($mark, 0, 3) : substr($mark, 0, 3);
 }
 
 /** Цвет класса вендора для имени и значка. */
@@ -120,7 +137,10 @@ function renderGpuRow(array $g): string {
     // --- Частота ядра: "2 017 / 2 407" или одна цифра ---
     $bc = fmtInt($g['base_clock'] ?? null);
     $bo = fmtInt($g['boost_clock'] ?? null);
-    $clocks = $bc !== null && $bo !== null ? "$bc / $bo" : ($bc ?? $bo);
+    // "МГц" теперь приписывается к самим показателям (в заголовке столбца его нет)
+    if ($bc !== null && $bo !== null)      $clocks = "$bc МГц / $bo МГц";
+    elseif ($bc !== null || $bo !== null)  $clocks = ($bc ?? $bo) . ' МГц';
+    else                                    $clocks = null;
 
     // --- Шейдеры / ROP / TMU ---
     $parts = array_filter([$bc!==null||true?'':''], 'strlen'); // не используется
@@ -214,7 +234,7 @@ function renderGpuRow(array $g): string {
 
     $isNew = !empty($g['is_new']) ? 'yes' : 'no';
     $perf  = isset($g['perf_score']) && $g['perf_score'] !== null && $g['perf_score'] !== '' ? (int)$g['perf_score'] : 0;
-    $mark  = gpuMark($brand, $full, $short);
+    $mark  = shortenMark(gpuMark($brand, $full, $short)); // метка <=3 символов, влезает в квадратик
 
     $dataAttrs = 'data-brand="' . e($brand) . '"'
         . ' data-year="' . ($year !== null ? (int)$year : '') . '"'
